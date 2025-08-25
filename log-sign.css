@@ -25,6 +25,8 @@ body{
   font-size: large;
   border: 0.5px solid;
   border-radius: 5px;
+  margin-top: 1px;
+  margin-bottom: 1px;
 }
 
 h3{
@@ -45,4 +47,8 @@ button{
 
 a {
   text-decoration: none;
+}
+
+a:visited{
+  color: #0d6efd;
 }
