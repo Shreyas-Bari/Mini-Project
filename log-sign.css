@@ -17,6 +17,7 @@ body{
   padding: 20px;
   align-content: start;
   border-radius: 15px;
+  background-color: rgb(240, 240, 240);
 }
 
 .typed-input{
@@ -52,3 +53,4 @@ a {
 a:visited{
   color: #0d6efd;
 }
+
