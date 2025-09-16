@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calorie Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" xintegrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+<header class="d-flex flex-wrap justify-content-center py-3 mb-4 border-bottom bg-white rounded shadow-sm">
+    <a href="#" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
+        <img class="bi me-2" width="40" height="32" aria-hidden="true" src="../images/speedometer.png">
+        <span class="fs-4">Calorie Tracker</span>
+    </a>
+    <ul class="nav nav-pills">
+        <li class="nav-item"><a href="#" class="nav-link active rounded-pill" aria-current="page">Home</a></li>
+        <li class="nav-item"><a href="#" class="nav-link rounded-pill">Features</a></li>
+        <li class="nav-item"><a href="#" class="nav-link rounded-pill">Pricing</a></li>
+        <li class="nav-item"><a href="#" class="nav-link rounded-pill">FAQs</a></li>
+        <li class="nav-item"><a href="#" class="nav-link rounded-pill">About</a></li>
+    </ul>
+</header>
+
+<main class="type-container">
+    <div class="dropdown-menu d-block position-static pt-0 mx-0 rounded-3 shadow overflow-hidden w-280px" data-bs-theme="light">
+        <form class="p-2 mb-2 bg-body-tertiary border-bottom">
+            Fruits
+            <input type="search" class="form-control search-input rounded-pill" autocomplete="false" placeholder="Type to search...">
+        </form>
+        <ul class="list-unstyled mb-0 overflow-auto" style="max-height: 250px;">
+            <li class="dropdown-item d-flex align-items-center gap-2 py-2" data-calories="52" data-name="Apple">
+                <span class="d-inline-block bg-success rounded-circle p-1"></span>
+                Apple
+                <span class="calorie-tooltip">52 calories / 100g</span>
+            </li>
+            <li class="dropdown-item d-flex align-items-center gap-2 py-2" data-calories="89" data-name="Banana">
+                <span class="d-inline-block bg-success rounded-circle p-1"></span>
+                Banana
+                <span class="calorie-tooltip">89 calories / 100g</span>
+            </li>
+            <li class="dropdown-item d-flex align-items-center gap-2 py-2" data-calories="47" data-name="Orange">
+                <span class="d-inline-block bg-success rounded-circle p-1"></span>
+                Orange
+                <span class="calorie-tooltip">47 calories / 100g</span>
+            </li>
+            <li class="dropdown-item d-flex align-items-center gap-2 py-2" data-calories="60" data-name="Mango">
+                <span class="d-inline-block bg-success rounded-circle p-1"></span>
+                Mango
+                <span class="calorie-tooltip">60 calories / 100g</span>
+            </li>
+            <li class="dropdown-item d-flex align-items-center gap-2 py-2" data-calories="50" data-name="Pineapple">
+                <span class="d-inline-block bg-success rounded-circle p-1"></span>
+                Pineapple
+                <span class="calorie-tooltip">50 calories / 100g</span>
+            </li>
+        </ul>
+    </div>
+
+    <div class="dropdown-menu d-block position-static pt-0 mx-0 rounded-3 shadow overflow-hidden w-280px" data-bs-theme="light">
+        <form class="p-2 mb-2 bg-body-tertiary border-bottom">
+            Vegetables
+            <input type="search" class="form-control search-input rounded-pill" autocomplete="false" placeholder="Type to search...">
+        </form>
+        <ul class="list-unstyled mb-0 overflow-auto" style="max-height: 250px;">
+            <li class="dropdown-item d-flex align-items-center gap-2 py-2" data-calories="23" data-name="Spinach">
+                <span class="d-inline-block bg-success rounded-circle p-1"></span>
+                Spinach
+                <span class="calorie-tooltip">23 calories / 100g</span>
+            </li>
+            <li class="dropdown-item d-flex align-items-center gap-2 py-2" data-calories="25" data-name="Cabbage">
+                <span class="d-inline-block bg-success rounded-circle p-1"></span>
+                Cabbage
+                <span class="calorie-tooltip">25 calories / 100g</span>
+            </li>
+            <li class="dropdown-item d-flex align-items-center gap-2 py-2" data-calories="40" data-name="Onion">
+                <span class="d-inline-block bg-success rounded-circle p-1"></span>
+                Onion
+                <span class="calorie-tooltip">40 calories / 100g</span>
+            </li>
+            <li class="dropdown-item d-flex align-items-center gap-2 py-2" data-calories="149" data-name="Garlic">
+                <span class="d-inline-block bg-success rounded-circle p-1"></span>
+                Garlic
+                <span class="calorie-tooltip">149 calories / 100g</span>
+            </li>
+            <li class="dropdown-item d-flex align-items-center gap-2 py-2" data-calories="40" data-name="Chilli">
+                <span class="d-inline-block bg-success rounded-circle p-1"></span>
+                Chilli
+                <span class="calorie-tooltip">40 calories / 100g</span>
+            </li>
+        </ul>
+    </div>
+
+    <div class="dropdown-menu d-block position-static pt-0 mx-0 rounded-3 shadow overflow-hidden w-280px" data-bs-theme="light">
+        <form class="p-2 mb-2 bg-body-tertiary border-bottom">
+            Meat
+            <input type="search" class="form-control search-input rounded-pill" autocomplete="false" placeholder="Type to search...">
+        </form>
+        <ul class="list-unstyled mb-0 overflow-auto" style="max-height: 250px;">
+            <li class="dropdown-item d-flex align-items-center gap-2 py-2" data-calories="165" data-name="Chicken">
+                <span class="d-inline-block bg-warning rounded-circle p-1"></span>
+                Chicken
+                <span class="calorie-tooltip">165 calories / 100g</span>
+            </li>
+            <li class="dropdown-item d-flex align-items-center gap-2 py-2" data-calories="155" data-name="Eggs">
+                <span class="d-inline-block bg-warning rounded-circle p-1"></span>
+                Eggs
+                <span class="calorie-tooltip">155 calories / 100g</span>
+            </li>
+            <li class="dropdown-item d-flex align-items-center gap-2 py-2" data-calories="294" data-name="Lamb">
+                <span class="d-inline-block bg-warning rounded-circle p-1"></span>
+                Lamb
+                <span class="calorie-tooltip">294 calories / 100g</span>
+            </li>
+            <li class="dropdown-item d-flex align-items-center gap-2 py-2" data-calories="242" data-name="Pork">
+                <span class="d-inline-block bg-warning rounded-circle p-1"></span>
+                Pork
+                <span class="calorie-tooltip">242 calories / 100g</span>
+            </li>
+            <li class="dropdown-item d-flex align-items-center gap-2 py-2" data-calories="242" data-name="Mutton">
+                <span class="d-inline-block bg-warning rounded-circle p-1"></span>
+                Mutton
+                <span class="calorie-tooltip">242 calories / 100g</span>
+            </li>
+        </ul>
+    </div>
+
+    <div class="dropdown-menu d-block position-static pt-0 mx-0 rounded-3 shadow overflow-hidden w-280px" data-bs-theme="light">
+        <form class="p-2 mb-2 bg-body-tertiary border-bottom">
+            Grains
+            <input type="search" class="form-control search-input rounded-pill" autocomplete="false" placeholder="Type to search...">
+        </form>
+        <ul class="list-unstyled mb-0 overflow-auto" style="max-height: 250px;">
+            <li class="dropdown-item d-flex align-items-center gap-2 py-2" data-calories="130" data-name="Rice">
+                <span class="d-inline-block bg-warning rounded-circle p-1"></span>
+                Rice
+                <span class="calorie-tooltip">130 calories / 100g</span>
+            </li>
+            <li class="dropdown-item d-flex align-items-center gap-2 py-2" data-calories="340" data-name="Wheat">
+                <span class="d-inline-block bg-warning rounded-circle p-1"></span>
+                Wheat
+                <span class="calorie-tooltip">340 calories / 100g</span>
+            </li>
+            <li class="dropdown-item d-flex align-items-center gap-2 py-2" data-calories="389" data-name="Oats">
+                <span class="d-inline-block bg-warning rounded-circle p-1"></span>
+                Oats
+                <span class="calorie-tooltip">389 calories / 100g</span>
+            </li>
+            <li class="dropdown-item d-flex align-items-center gap-2 py-2" data-calories="354" data-name="Barley">
+                <span class="d-inline-block bg-warning rounded-circle p-1"></span>
+                Barley
+                <span class="calorie-tooltip">354 calories / 100g</span>
+            </li>
+            <li class="dropdown-item d-flex align-items-center gap-2 py-2" data-calories="86" data-name="Corn">
+                <span class="d-inline-block bg-warning rounded-circle p-1"></span>
+                Corn
+                <span class="calorie-tooltip">86 calories / 100g</span>
+            </li>
+        </ul>
+    </div>
+
+    <div class="dropdown-menu d-block position-static pt-0 mx-0 rounded-3 shadow overflow-hidden w-280px" data-bs-theme="light">
+        <form class="p-2 mb-2 bg-body-tertiary border-bottom">
+            Dairy
+            <input type="search" class="form-control search-input rounded-pill" autocomplete="false" placeholder="Type to search...">
+        </form>
+        <ul class="list-unstyled mb-0 overflow-auto" style="max-height: 250px;">
+            <li class="dropdown-item d-flex align-items-center gap-2 py-2" data-calories="61" data-name="Milk">
+                <span class="d-inline-block bg-danger rounded-circle p-1"></span>
+                Milk
+                <span class="calorie-tooltip">61 calories / 100g</span>
+            </li>
+            <li class="dropdown-item d-flex align-items-center gap-2 py-2" data-calories="717" data-name="Butter">
+                <span class="d-inline-block bg-danger rounded-circle p-1"></span>
+                Butter
+                <span class="calorie-tooltip">717 calories / 100g</span>
+            </li>
+            <li class="dropdown-item d-flex align-items-center gap-2 py-2" data-calories="900" data-name="Ghee">
+                <span class="d-inline-block bg-danger rounded-circle p-1"></span>
+                Ghee
+                <span class="calorie-tooltip">900 calories / 100g</span>
+            </li>
+            <li class="dropdown-item d-flex align-items-center gap-2 py-2" data-calories="403" data-name="Cheese">
+                <span class="d-inline-block bg-danger rounded-circle p-1"></span>
+                Cheese
+                <span class="calorie-tooltip">403 calories / 100g</span>
+            </li>
+            <li class="dropdown-item d-flex align-items-center gap-2 py-2" data-calories="40" data-name="Butter Milk">
+                <span class="d-inline-block bg-danger rounded-circle p-1"></span>
+                Butter Milk
+                <span class="calorie-tooltip">40 calories / 100g</span>
+            </li>
+        </ul>
+    </div>
+
+    <div class="dropdown-menu d-block position-static pt-0 mx-0 rounded-3 shadow overflow-hidden w-280px" data-bs-theme="light">
+        <form class="p-2 mb-2 bg-body-tertiary border-bottom">
+            Fish
+            <input type="search" class="form-control search-input rounded-pill" autocomplete="false" placeholder="Type to search...">
+        </form>
+        <ul class="list-unstyled mb-0 overflow-auto" style="max-height: 250px;">
+            <li class="dropdown-item d-flex align-items-center gap-2 py-2" data-calories="82" data-name="Cod">
+                <span class="d-inline-block bg-danger rounded-circle p-1"></span>
+                Cod
+                <span class="calorie-tooltip">82 calories / 100g</span>
+            </li>
+            <li class="dropdown-item d-flex align-items-center gap-2 py-2" data-calories="208" data-name="Salmon">
+                <span class="d-inline-block bg-danger rounded-circle p-1"></span>
+                Salmon
+                <span class="calorie-tooltip">208 calories / 100g</span>
+            </li>
+            <li class="dropdown-item d-flex align-items-center gap-2 py-2" data-calories="129" data-name="Bombay Duck">
+                <span class="d-inline-block bg-danger rounded-circle p-1"></span>
+                Bombay Duck
+                <span class="calorie-tooltip">129 calories / 100g</span>
+            </li>
+            <li class="dropdown-item d-flex align-items-center gap-2 py-2" data-calories="85" data-name="Prawns">
+                <span class="d-inline-block bg-danger rounded-circle p-1"></span>
+                Prawns
+                <span class="calorie-tooltip">85 calories / 100g</span>
+            </li>
+            <li class="dropdown-item d-flex align-items-center gap-2 py-2" data-calories="87" data-name="Crabs">
+                <span class="d-inline-block bg-danger rounded-circle p-1"></span>
+                Crabs
+                <span class="calorie-tooltip">87 calories / 100g</span>
+            </li>
+        </ul>
+    </div>
+</main>
+
+<div class="container selected-items-section">
+    <h2>Selected Items</h2>
+    <ul id="selected-items-list" class="list-unstyled mt-3">
+        <!-- Selected items will be added here dynamically -->
+    </ul>
+    <div id="total-calories-container">
+        <p>Grand Total: <span id="grand-total-calories">0</span> calories</p>
+    </div>
+    <div id="calorie-chart-container">
+        <canvas id="calorie-chart"></canvas>
+    </div>
+</div>
+
+<footer class="d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top">
+    <p class="col-md-4 mb-0 text-body-secondary">© 2025 Calorie Tracker, Inc</p>
+    <a href="#" class="col-md-4 d-flex align-items-center justify-content-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none" aria-label="Bootstrap">
+        <img class="bi me-2" width="40" height="32" aria-hidden="true" src="https://placehold.co/40x32/878787/fff?text=CT">
+    </a>
+    <ul class="nav col-md-4 justify-content-end">
+        <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">Home</a></li>
+        <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">Features</a></li>
+        <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">Pricing</a></li>
+        <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">FAQs</a></li>
+        <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">About</a></li>
+    </ul>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" xintegrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+</body>
+</html>

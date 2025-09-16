@@ -1,0 +1,89 @@
+        body {
+            padding: 15px;
+            padding-top: 0px;
+            background-color: #f8f9fa;
+        }
+
+        .type-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .dropdown-menu {
+            height: 350px;
+        }
+
+        .search-input {
+            margin-bottom: 8px;
+        }
+
+        .dropdown-item {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .calorie-tooltip {
+            visibility: hidden;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            white-space: nowrap;
+        }
+
+        .dropdown-item:hover .calorie-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .selected-items-section {
+            width: 100%;
+            margin-top: 3rem;
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #selected-items-list li {
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        #selected-items-list li:last-child {
+            border-bottom: none;
+        }
+
+        #total-calories-container {
+            margin-top: 1rem;
+            font-size: 1.25rem;
+            font-weight: bold;
+            text-align: right;
+            border-top: 2px solid #333;
+            padding-top: 1rem;
+        }
+
+        .quantity-input {
+            width: 80px;
+            text-align: center;
+        }
+
+        #calorie-chart-container {
+            position: relative;
+            height: 400px;
+            margin-top: 2rem;
+        }
