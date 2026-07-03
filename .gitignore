@@ -9,3 +9,16 @@ UI_references/
 # Local Prompts and Specifications
 calorie-tracker.md
 completed_work.md
+
+# Environment Variables & API Keys
+# These files contain sensitive secrets (USDA API key) and must NEVER be committed.
+.env
+.env.local
+.env.*.local
+
+# Firebase Cloud Functions
+functions/node_modules/
+functions/.env
+
+# Vite build output
+dist/

@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { db } from '../firebase';
 import { collection, addDoc, deleteDoc, doc, getDocs, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
 import GlassCard from '../components/GlassCard';
+import { searchAllAPIs } from '../services/foodApi';
 import { 
   Search, 
   Trash2, 
@@ -17,9 +18,19 @@ import {
   X,
   Check,
   Lock,
-  AlertTriangle
+  AlertTriangle,
+  Globe,
+  Database,
+  Loader2,
+  Wifi,
+  WifiOff,
+  Sparkles
 } from 'lucide-react';
 
+/* ══════════════════════════════════════════════════════════════
+   LOCAL FOOD DATABASE (Indian Foods — Instant Fallback Cache)
+   All values are per 100g serving.
+   ══════════════════════════════════════════════════════════════ */
 const FOOD_DB = [
   // Breakfast
   { id:"poha",         name:"Poha (Flattened Rice)",   category:"Breakfast",    calories:248, protein:4.4,  carbs:34.2, fat:10.4, fiber:2.6 },
@@ -103,6 +114,9 @@ const FOOD_DB = [
 
 const CATEGORIES = ["All", "Breakfast", "Lunch/Dinner", "Snacks", "Beverages", "Dairy", "Grains", "Fruits & Vegetables"];
 
+/* ──────────────────────────────────────────────
+   Date utilities
+   ────────────────────────────────────────────── */
 const formatDateKey = (date) => date.toLocaleDateString('en-CA');
 
 const createLocalDate = (dateKey) => {
@@ -117,6 +131,18 @@ const getDateWithOffset = (offset) => {
   return date;
 };
 
+/* ══════════════════════════════════════════════════════════════
+   SOURCE BADGE — visual identifier for where a food came from
+   ══════════════════════════════════════════════════════════════ */
+const SOURCE_BADGES = {
+  'USDA': { label: 'USDA', cls: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20', icon: Globe },
+  'Open Food Facts': { label: 'OFF', cls: 'bg-blue-500/15 text-blue-400 border-blue-500/20', icon: Globe },
+  'Local': { label: 'Local', cls: 'bg-accent-teal/10 text-accent-teal border-accent-teal/20', icon: Database },
+};
+
+/* ══════════════════════════════════════════════════════════════
+   MAIN COMPONENT
+   ══════════════════════════════════════════════════════════════ */
 export default function FoodSearch({ user, activeDate, setActiveDate }) {
   const todayStr = formatDateKey(new Date());
   const [localActiveDate, setLocalActiveDate] = useState(todayStr);
@@ -136,9 +162,16 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
   const [loggedItems, setLoggedItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // ── API search state ──
+  const [apiResults, setApiResults] = useState([]);
+  const [apiLoading, setApiLoading] = useState(false);
+  const [apiSearched, setApiSearched] = useState(false);
+  const [apiErrors, setApiErrors] = useState([]);
+  const debounceRef = useRef(null);
+
   const isToday = selectedDate === todayStr;
 
-  // Firestore path: users/{uid}/daily_logs/{date}/items
+  /* ────── Firestore: Load daily items ────── */
   const loadLoggedItems = async () => {
     setLoading(true);
     try {
@@ -158,7 +191,63 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
     loadLoggedItems();
   }, [user.uid, selectedDate]);
 
-  // Handle Date Navigation
+  /* ────── Debounced API Search ────── */
+  const performApiSearch = useCallback(async (query) => {
+    if (!query || query.trim().length < 2) {
+      setApiResults([]);
+      setApiSearched(false);
+      setApiLoading(false);
+      setApiErrors([]);
+      return;
+    }
+
+    setApiLoading(true);
+    setApiSearched(true);
+    setApiErrors([]);
+
+    try {
+      const { usda, off, errors } = await searchAllAPIs(query);
+      setApiResults([...usda, ...off]);
+      setApiErrors(errors);
+    } catch (e) {
+      console.error('API search error:', e);
+      setApiResults([]);
+      setApiErrors(['Search failed. Using local database only.']);
+    } finally {
+      setApiLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Clear any existing debounce timer
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    if (!searchQuery || searchQuery.trim().length < 2) {
+      setApiResults([]);
+      setApiSearched(false);
+      setApiLoading(false);
+      setApiErrors([]);
+      return;
+    }
+
+    // Show loading state immediately for responsiveness
+    setApiLoading(true);
+
+    // Debounce the actual API call by 500ms
+    debounceRef.current = setTimeout(() => {
+      performApiSearch(searchQuery);
+    }, 500);
+
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, [searchQuery, performApiSearch]);
+
+  /* ────── Date Navigation ────── */
   const changeDateByOffset = (offset) => {
     const d = createLocalDate(selectedDate);
     d.setDate(d.getDate() + offset);
@@ -169,14 +258,18 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
     setEditingItem(null);
   };
 
-  // Filter food database based on query & category
-  const filteredFoods = FOOD_DB.filter(food => {
+  /* ────── Filter local food database ────── */
+  const filteredLocalFoods = FOOD_DB.filter(food => {
     const matchesQuery = food.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = activeCategory === 'All' || food.category === activeCategory;
     return matchesQuery && matchesCategory;
   });
 
-  // Calculate macros dynamically for the selected food and serving size (per 100g base)
+  /* ────── Combined display: local + API results ────── */
+  const hasSearchQuery = searchQuery.trim().length >= 2;
+  const totalResultCount = filteredLocalFoods.length + (hasSearchQuery ? apiResults.length : 0);
+
+  /* ────── Macro calculator for selected food ────── */
   const getCalculatedMacros = () => {
     if (!selectedFood) return { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 };
     const ratio = servingGrams / 100;
@@ -191,7 +284,7 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
 
   const calculated = getCalculatedMacros();
 
-  // Log food to Firestore
+  /* ────── Log food to Firestore ────── */
   const handleLogFood = async () => {
     if (!selectedFood || !isToday) return;
     try {
@@ -205,11 +298,11 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
         fiber: calculated.fiber,
         servingGrams: servingGrams,
         mealType: mealSlot,
+        foodSource: selectedFood.source || 'Local',
         loggedAt: serverTimestamp()
       };
       await addDoc(ref, newItem);
       
-      // Reset search selector & reload daily logs
       setSelectedFood(null);
       setServingGrams(100);
       loadLoggedItems();
@@ -218,13 +311,14 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
     }
   };
 
-  // Edit logged item
+  /* ────── Edit logged item ────── */
   const handleEditItem = (item) => {
     if (!isToday) return;
     const baseFood = FOOD_DB.find(f => f.name === item.foodName) || {
       id: "custom",
       name: item.foodName,
       category: item.mealType,
+      source: item.foodSource || 'Local',
       calories: Math.round((item.calories / item.servingGrams) * 100),
       protein: parseFloat(((item.protein / item.servingGrams) * 100).toFixed(1)),
       carbs: parseFloat(((item.carbs / item.servingGrams) * 100).toFixed(1)),
@@ -237,7 +331,7 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
     setMealSlot(item.mealType);
   };
 
-  // Update food in Firestore
+  /* ────── Update food in Firestore ────── */
   const handleUpdateFood = async () => {
     if (!editingItem || !isToday) return;
     try {
@@ -261,7 +355,7 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
     }
   };
 
-  // Delete logged item
+  /* ────── Delete logged item ────── */
   const handleDeleteItem = async (itemId) => {
     if (!isToday) return;
     try {
@@ -273,7 +367,7 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
     }
   };
 
-  // Formatted date label
+  /* ────── Date display helpers ────── */
   const getDisplayDateLabel = () => {
     if (isToday) return "Today";
     return createLocalDate(selectedDate).toLocaleDateString("en-IN", {
@@ -292,7 +386,7 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
     });
   };
 
-  // Sum daily totals
+  /* ────── Daily totals ────── */
   const dailyTotals = loggedItems.reduce((acc, it) => {
     acc.calories += it.calories || 0;
     acc.protein += it.protein || 0;
@@ -302,7 +396,7 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
     return acc;
   }, { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 });
 
-  // Open food card for the modal
+  /* ────── Select food card ────── */
   const handleSelectFood = (food) => {
     if (!isToday) return;
     setSelectedFood(food);
@@ -310,6 +404,7 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
     setMealSlot('Breakfast');
   };
 
+  /* ────── Date modal helpers ────── */
   const handleDateSelection = (option) => {
     if (option.disabled || option.dateStr > todayStr) return;
     updateActiveDate(option.dateStr);
@@ -354,6 +449,77 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
 
   const canNavigateForward = selectedDate < todayStr;
 
+  /* ────── Render a single food card (shared between local & API results) ────── */
+  const renderFoodCard = (food, index, sectionDelay = 0) => {
+    const source = food.source || 'Local';
+    const badge = SOURCE_BADGES[source] || SOURCE_BADGES['Local'];
+    const BadgeIcon = badge.icon;
+
+    return (
+      <motion.div
+        key={food.id}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: Math.min(sectionDelay + index * 0.03, 0.5), ease: [0.33, 1, 0.68, 1] }}
+        onClick={() => handleSelectFood(food)}
+        aria-disabled={!isToday}
+        className={`relative overflow-hidden bg-slate-950/40 backdrop-blur-xl border rounded-2xl p-5 shadow-glass transition-all duration-300 ${
+          isToday
+            ? 'cursor-pointer hover:scale-[1.01] hover:border-indigo-500/40 hover:shadow-[0_0_20px_rgba(99,102,241,0.15)]'
+            : 'cursor-not-allowed opacity-60'
+        } ${
+          selectedFood?.id === food.id 
+            ? 'border-accent-teal/40 shadow-[0_0_20px_rgba(34,211,238,0.15)]' 
+            : 'border-white/[0.06]'
+        }`}
+      >
+        {/* Inner subtle gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
+
+        <div className="relative z-10">
+          {/* Food title, source badge & calorie count */}
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-bold text-slate-100 leading-snug">{food.name}</h3>
+              {food.brand && (
+                <p className="text-[10px] text-slate-500 mt-0.5 truncate">{food.brand}</p>
+              )}
+              <div className="flex items-center gap-1.5 mt-1.5">
+                <span className={`inline-flex items-center gap-1 text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-widest border ${badge.cls}`}>
+                  <BadgeIcon className="w-2.5 h-2.5" />
+                  {badge.label}
+                </span>
+                <span className="text-[9px] font-bold text-accent-teal/80 bg-accent-teal/10 px-1.5 py-0.5 rounded-full uppercase tracking-widest">
+                  {food.category?.split(',')[0]?.trim() || 'General'}
+                </span>
+              </div>
+            </div>
+            <div className="text-right shrink-0">
+              <p className="text-lg font-black text-slate-100 leading-none">{food.calories}</p>
+              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">kcal</p>
+            </div>
+          </div>
+
+          {/* Serving label */}
+          <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-3">per 100g serving</p>
+
+          {/* Macro tag pills */}
+          <div className="flex items-center gap-2">
+            <span className="flex-1 text-center py-1.5 rounded-lg bg-pink-500/10 border border-pink-500/15 text-[10px] font-bold text-accent-pink">
+              P {food.protein}g
+            </span>
+            <span className="flex-1 text-center py-1.5 rounded-lg bg-yellow-500/10 border border-yellow-500/15 text-[10px] font-bold text-accent-yellow">
+              C {food.carbs}g
+            </span>
+            <span className="flex-1 text-center py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/15 text-[10px] font-bold text-accent-green">
+              F {food.fat}g
+            </span>
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
+
   return (
     <div className="space-y-6">
       {/* Page Header and Date Selector */}
@@ -363,7 +529,7 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
             Food Search & Journal
             {!isToday && <Lock className="w-5 h-5 text-amber-500" />}
           </h1>
-          <p className="text-slate-400 text-sm mt-1">Search the database and manage your daily logs</p>
+          <p className="text-slate-400 text-sm mt-1">Search local & global databases to manage your daily logs</p>
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
@@ -416,6 +582,7 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
         </div>
       </div>
 
+      {/* Date Selector Modal */}
       {typeof document !== 'undefined' && createPortal(
         <AnimatePresence>
           {isDateModalOpen && (
@@ -547,14 +714,14 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
                 <Search className="absolute left-4 top-3.5 w-5 h-5 text-slate-500" />
                 <input
                   type="text"
-                  placeholder="Search food item (e.g. Roti, Poha, Chicken, Mango)..."
+                  placeholder="Search local DB, USDA, & Open Food Facts..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full bg-white/[0.03] border border-white/[0.08] focus:border-accent-purple focus:ring-1 focus:ring-accent-purple transition-all duration-300 rounded-xl py-3.5 pl-12 pr-10 text-sm text-white placeholder-slate-500 outline-none"
                 />
                 {searchQuery && (
                   <button 
-                    onClick={() => setSearchQuery('')}
+                    onClick={() => { setSearchQuery(''); setApiResults([]); setApiSearched(false); }}
                     className="absolute right-4 top-4 text-slate-500 hover:text-white"
                   >
                     <X className="w-4 h-4" />
@@ -562,10 +729,21 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
                 )}
               </div>
 
-              {/* Results count */}
-              <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest whitespace-nowrap shrink-0">
-                {filteredFoods.length} items
-              </span>
+              {/* Results count + API status indicator */}
+              <div className="flex items-center gap-2 shrink-0">
+                {apiLoading && (
+                  <Loader2 className="w-4 h-4 text-accent-teal animate-spin" />
+                )}
+                {apiSearched && !apiLoading && apiResults.length > 0 && (
+                  <Wifi className="w-4 h-4 text-accent-green" />
+                )}
+                {apiSearched && !apiLoading && apiResults.length === 0 && apiErrors.length > 0 && (
+                  <WifiOff className="w-4 h-4 text-amber-400" />
+                )}
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest whitespace-nowrap">
+                  {totalResultCount} items
+                </span>
+              </div>
             </div>
 
             {/* Category pills */}
@@ -584,73 +762,108 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
                 </button>
               ))}
             </div>
+
+            {/* Active API search indicator */}
+            {hasSearchQuery && (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-accent-purple/5 border border-accent-purple/10">
+                <Sparkles className="w-3.5 h-3.5 text-accent-purple" />
+                <span className="text-[10px] text-slate-400 font-semibold">
+                  Searching across <span className="text-accent-teal font-bold">Local DB</span> + <span className="text-emerald-400 font-bold">USDA (300K+)</span> + <span className="text-blue-400 font-bold">Open Food Facts (2M+)</span>
+                </span>
+              </div>
+            )}
           </GlassCard>
 
-          {/* 3-Column Food Card Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 max-h-[calc(100vh-280px)] overflow-y-auto pr-1 pb-4">
-            {filteredFoods.length === 0 ? (
-              <div className="col-span-full py-16 flex flex-col items-center justify-center text-center">
+          {/* Food Card Grid — Local Results */}
+          <div className="max-h-[calc(100vh-280px)] overflow-y-auto pr-1 pb-4 space-y-6">
+            {/* LOCAL RESULTS SECTION */}
+            {filteredLocalFoods.length > 0 && (
+              <div>
+                {hasSearchQuery && (
+                  <div className="flex items-center gap-2 mb-3">
+                    <Database className="w-4 h-4 text-accent-teal" />
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Local Database</span>
+                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">({filteredLocalFoods.length})</span>
+                  </div>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {filteredLocalFoods.map((food, index) => renderFoodCard({ ...food, source: 'Local' }, index, 0))}
+                </div>
+              </div>
+            )}
+
+            {/* API RESULTS SECTION */}
+            {hasSearchQuery && (
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Globe className="w-4 h-4 text-accent-purple" />
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Online Results</span>
+                  {apiLoading ? (
+                    <span className="flex items-center gap-1.5 text-[10px] text-accent-teal font-bold uppercase tracking-wider">
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      Searching global databases...
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                      ({apiResults.length})
+                    </span>
+                  )}
+                </div>
+
+                {/* API error warnings */}
+                {apiErrors.length > 0 && !apiLoading && (
+                  <div className="flex items-center gap-2 mb-3 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[10px] text-amber-300 font-semibold">
+                    <WifiOff className="w-3.5 h-3.5 shrink-0" />
+                    {apiErrors.join(' · ')} — Showing local results as fallback.
+                  </div>
+                )}
+
+                {/* API loading skeleton */}
+                {apiLoading && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="bg-slate-950/40 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-5 animate-pulse">
+                        <div className="h-4 bg-white/5 rounded-lg mb-3 w-3/4" />
+                        <div className="h-3 bg-white/5 rounded-lg mb-4 w-1/2" />
+                        <div className="flex gap-2">
+                          <div className="flex-1 h-8 bg-white/5 rounded-lg" />
+                          <div className="flex-1 h-8 bg-white/5 rounded-lg" />
+                          <div className="flex-1 h-8 bg-white/5 rounded-lg" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* API result cards */}
+                {!apiLoading && apiResults.length > 0 && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {apiResults.map((food, index) => renderFoodCard(food, index, 0.1))}
+                  </div>
+                )}
+
+                {/* No API results state */}
+                {!apiLoading && apiSearched && apiResults.length === 0 && apiErrors.length === 0 && (
+                  <div className="py-8 flex flex-col items-center justify-center text-center">
+                    <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-500 mb-2">
+                      <Globe className="w-4 h-4" />
+                    </div>
+                    <p className="text-xs font-semibold text-slate-400">No online results found for "{searchQuery}"</p>
+                    <p className="text-[10px] text-slate-500 mt-0.5">Try a different search term or check spelling</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Global empty state (no local AND no API results) */}
+            {filteredLocalFoods.length === 0 && (!hasSearchQuery || (!apiLoading && apiResults.length === 0)) && (
+              <div className="py-16 flex flex-col items-center justify-center text-center">
                 <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-500 mb-3">
                   <Search className="w-5 h-5" />
                 </div>
                 <p className="text-sm font-semibold text-slate-400">No food items match your search</p>
                 <p className="text-xs text-slate-500 mt-1">Try a different keyword or category filter</p>
               </div>
-            ) : (
-              filteredFoods.map((food, index) => (
-                <motion.div
-                  key={food.id}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.35, delay: Math.min(index * 0.03, 0.3), ease: [0.33, 1, 0.68, 1] }}
-                  onClick={() => handleSelectFood(food)}
-                  aria-disabled={!isToday}
-                  className={`relative overflow-hidden bg-slate-950/40 backdrop-blur-xl border rounded-2xl p-5 shadow-glass transition-all duration-300 ${
-                    isToday
-                      ? 'cursor-pointer hover:scale-[1.01] hover:border-indigo-500/40 hover:shadow-[0_0_20px_rgba(99,102,241,0.15)]'
-                      : 'cursor-not-allowed opacity-60'
-                  } ${
-                    selectedFood?.id === food.id 
-                      ? 'border-accent-teal/40 shadow-[0_0_20px_rgba(34,211,238,0.15)]' 
-                      : 'border-white/[0.06]'
-                  }`}
-                >
-                  {/* Inner subtle gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
-
-                  <div className="relative z-10">
-                    {/* Food title & category */}
-                    <div className="flex items-start justify-between gap-3 mb-4">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-bold text-slate-100 leading-snug">{food.name}</h3>
-                        <span className="inline-block mt-1.5 text-[9px] font-bold text-accent-teal/80 bg-accent-teal/10 px-2 py-0.5 rounded-full uppercase tracking-widest">
-                          {food.category}
-                        </span>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-lg font-black text-slate-100 leading-none">{food.calories}</p>
-                        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">kcal</p>
-                      </div>
-                    </div>
-
-                    {/* Serving label */}
-                    <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-3">per 100g serving</p>
-
-                    {/* Macro tag pills */}
-                    <div className="flex items-center gap-2">
-                      <span className="flex-1 text-center py-1.5 rounded-lg bg-pink-500/10 border border-pink-500/15 text-[10px] font-bold text-accent-pink">
-                        P {food.protein}g
-                      </span>
-                      <span className="flex-1 text-center py-1.5 rounded-lg bg-yellow-500/10 border border-yellow-500/15 text-[10px] font-bold text-accent-yellow">
-                        C {food.carbs}g
-                      </span>
-                      <span className="flex-1 text-center py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/15 text-[10px] font-bold text-accent-green">
-                        F {food.fat}g
-                      </span>
-                    </div>
-                  </div>
-                </motion.div>
-              ))
             )}
           </div>
         </div>
@@ -698,6 +911,9 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
                           <p className="text-sm font-bold text-white leading-snug">{item.foodName}</p>
                           <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-wider font-semibold">
                             {item.mealType} &middot; {item.servingGrams}g
+                            {item.foodSource && item.foodSource !== 'Local' && (
+                              <span className="ml-1.5 text-emerald-400">· {item.foodSource}</span>
+                            )}
                           </p>
                         </div>
                         <div className="text-right shrink-0">
@@ -781,7 +997,7 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
             {/* Backdrop */}
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
-            {/* Modal Content - Made larger and more prominent per requirements */}
+            {/* Modal Content */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -795,9 +1011,25 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
                   <h3 className="text-2xl font-extrabold text-slate-100">
                     {editingItem ? `Editing: ${selectedFood.name}` : selectedFood.name}
                   </h3>
-                  <span className="inline-block mt-2 text-[10px] font-bold text-accent-teal bg-accent-teal/10 px-2.5 py-1 rounded-full uppercase tracking-widest border border-accent-teal/20">
-                    {selectedFood.category}
-                  </span>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="inline-block text-[10px] font-bold text-accent-teal bg-accent-teal/10 px-2.5 py-1 rounded-full uppercase tracking-widest border border-accent-teal/20">
+                      {selectedFood.category?.split(',')[0]?.trim() || 'General'}
+                    </span>
+                    {selectedFood.source && selectedFood.source !== 'Local' && (() => {
+                      const badge = SOURCE_BADGES[selectedFood.source];
+                      if (!badge) return null;
+                      const BadgeIcon = badge.icon;
+                      return (
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-widest border ${badge.cls}`}>
+                          <BadgeIcon className="w-3 h-3" />
+                          {selectedFood.source}
+                        </span>
+                      );
+                    })()}
+                    {selectedFood.brand && (
+                      <span className="text-[10px] text-slate-500 font-semibold">{selectedFood.brand}</span>
+                    )}
+                  </div>
                 </div>
                 <button 
                   onClick={() => { setSelectedFood(null); setEditingItem(null); }}
