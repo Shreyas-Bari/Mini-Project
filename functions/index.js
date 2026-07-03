@@ -49,10 +49,52 @@ function formatFoodName(name) {
 }
 
 /* ──────────────────────────────────────────────────────────────
+   Helper: Deduplicate similar foods with identical macros
+   ────────────────────────────────────────────────────────────── */
+function deduplicateFoods(foods) {
+  if (!foods || !Array.isArray(foods)) return [];
+  const seen = new Map();
+  
+  for (const food of foods) {
+    const normalizedName = food.name.toLowerCase().replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
+    const key = `${normalizedName}_${Math.round(food.calories)}_${Math.round(food.protein * 10) / 10}_${Math.round(food.carbs * 10) / 10}_${Math.round(food.fat * 10) / 10}_${Math.round(food.fiber * 10) / 10}`;
+    
+    if (seen.has(key)) {
+      const existing = seen.get(key);
+      if (food.brand && !existing._brands.includes(food.brand)) {
+        existing._brands.push(food.brand);
+      }
+    } else {
+      seen.set(key, {
+        ...food,
+        _brands: food.brand ? [food.brand] : []
+      });
+    }
+  }
+  
+  return Array.from(seen.values()).map(item => {
+    if (item._brands && item._brands.length > 0) {
+      if (item._brands.length === 1) {
+        item.brand = item._brands[0];
+      } else {
+        item._brands.sort();
+        const primary = item._brands.slice(0, 3);
+        const remaining = item._brands.length - 3;
+        item.brand = `${primary.join(', ')}${remaining > 0 ? ` & ${remaining} other${remaining > 1 ? 's' : ''}` : ''}`;
+      }
+    } else {
+      item.brand = '';
+    }
+    delete item._brands;
+    return item;
+  });
+}
+
+/* ──────────────────────────────────────────────────────────────
    Helper: Normalize USDA response into our standard food format
    ────────────────────────────────────────────────────────────── */
 function normalizeUSDAFoods(foods) {
-  return foods
+  const mapped = foods
     .map((food) => ({
       id: `usda_${food.fdcId}`,
       name: formatFoodName(food.description || food.lowercaseDescription || ""),
@@ -66,6 +108,8 @@ function normalizeUSDAFoods(foods) {
       fiber: extractNutrient(food.foodNutrients, "Fiber, total dietary"),
     }))
     .filter((f) => f.calories > 0 || f.protein > 0);
+
+  return deduplicateFoods(mapped);
 }
 
 /* ══════════════════════════════════════════════════════════════
