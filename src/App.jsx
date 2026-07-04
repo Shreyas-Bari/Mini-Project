@@ -17,13 +17,13 @@ import Feedback from './pages/Feedback';
 
 const getTodayDateString = () => new Date().toLocaleDateString('en-CA');
 
-const LATEST_UPDATE_MESSAGE = "Update v1.2: We have integrated the live USDA and Open Food Facts API! Search thousands of foods now.";
+const LATEST_UPDATE_MESSAGE = "Update v1.3: We have adjusted the Aspect Ratio to suit for Mobile Users. Feel Free to use the Website via a Mobile Phone!";
 
 export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeLogDate, setActiveLogDate] = useState(getTodayDateString);
-  
+
   const [isCollapsed, setIsCollapsed] = useState(() => {
     const saved = localStorage.getItem('nutritrack_sidebar_collapsed');
     return saved === 'true';
@@ -72,15 +72,15 @@ export default function App() {
       {/* Global Update Notification Banner */}
       <AnimatePresence>
         {user && showUpdateBanner && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: -20, x: "-50%" }}
             animate={{ opacity: 1, y: 0, x: "-50%" }}
             exit={{ opacity: 0, y: -20, x: "-50%" }}
             className="fixed top-4 left-1/2 z-[100] w-[calc(100%-2rem)] max-w-xl bg-amber-400 text-slate-900 font-medium px-4 py-3 rounded-xl shadow-[0_12px_40px_rgba(251,191,36,0.3)] flex items-center justify-between gap-4 transition-all duration-300"
           >
             <span className="text-sm leading-snug">{LATEST_UPDATE_MESSAGE}</span>
-            <button 
-              onClick={dismissUpdateBanner} 
+            <button
+              onClick={dismissUpdateBanner}
               className="p-1 rounded-lg text-slate-900 hover:bg-amber-500/50 transition-colors shrink-0 outline-none"
               aria-label="Close notification"
             >
@@ -128,27 +128,27 @@ export default function App() {
                   }}
                 />
 
-                <Sidebar 
-                  user={user} 
-                  isCollapsed={isCollapsed} 
-                  setIsCollapsed={setIsCollapsed} 
+                <Sidebar
+                  user={user}
+                  isCollapsed={isCollapsed}
+                  setIsCollapsed={setIsCollapsed}
                   isMobileDrawerOpen={isMobileDrawerOpen}
                   setIsMobileDrawerOpen={setIsMobileDrawerOpen}
                 />
-                
+
                 <div className={`flex-1 flex flex-col min-h-screen relative z-10 transition-all duration-300 ease-in-out ${isCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
                   {/* Mobile Top Header */}
                   <div className="md:hidden flex items-center justify-between px-4 py-3 border-b border-white/[0.06] bg-[#11131a]/80 backdrop-blur-xl sticky top-0 z-40">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-accent-purple to-accent-teal flex items-center justify-center shadow-sm shrink-0">
                         <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                          <path d="M12 2C6.5 6 4 10.5 4 14a8 8 0 0 0 16 0c0-3.5-2.5-8-8-12Z"/>
-                          <path d="M12 22c-2.2 0-4-1.8-4-4 0-2 1.5-4.5 4-7 2.5 2.5 4 5 4 7 0 2.2-1.8 4-4 4Z" opacity="0.6"/>
+                          <path d="M12 2C6.5 6 4 10.5 4 14a8 8 0 0 0 16 0c0-3.5-2.5-8-8-12Z" />
+                          <path d="M12 22c-2.2 0-4-1.8-4-4 0-2 1.5-4.5 4-7 2.5 2.5 4 5 4 7 0 2.2-1.8 4-4 4Z" opacity="0.6" />
                         </svg>
                       </div>
                       <h2 className="text-base font-bold bg-gradient-to-r from-white to-accent-teal bg-clip-text text-transparent tracking-tight">NutriTrack</h2>
                     </div>
-                    <button 
+                    <button
                       onClick={() => setIsMobileDrawerOpen(true)}
                       className="p-2 rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:text-white active:bg-white/10 transition-colors"
                       aria-label="Open navigation menu"
