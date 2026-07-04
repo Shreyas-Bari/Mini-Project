@@ -591,7 +591,7 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
+              className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4"
               onClick={(e) => {
                 if (e.target === e.currentTarget) setIsDateModalOpen(false);
               }}
@@ -601,7 +601,7 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 14 }}
                 transition={{ type: "spring", stiffness: 420, damping: 32 }}
-                className="bg-[#11131a]/90 backdrop-blur-xl border border-white/[0.07] p-6 rounded-2xl max-w-md w-full shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] max-h-[88vh] overflow-hidden"
+                className="bg-[#11131a]/90 backdrop-blur-xl border border-white/[0.07] p-6 rounded-2xl max-w-md w-full shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] max-h-[88vh] overflow-hidden flex flex-col"
                 role="dialog"
                 aria-modal="true"
                 aria-label="Select active food log date"
@@ -1003,7 +1003,7 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ type: "spring", stiffness: 400, damping: 30 }}
-              className="relative w-[calc(100%-2rem)] mx-auto max-w-2xl bg-slate-950/90 backdrop-blur-2xl border border-white/[0.08] rounded-3xl p-6 sm:p-8 shadow-[0_16px_64px_0_rgba(0,0,0,0.6)] z-10 max-h-[90vh] overflow-y-auto no-scrollbar"
+              className="relative w-[calc(100%-2rem)] mx-auto max-w-2xl bg-slate-950/90 backdrop-blur-2xl border border-white/[0.08] rounded-3xl p-6 sm:p-8 shadow-[0_16px_64px_0_rgba(0,0,0,0.6)] z-10 max-h-[90vh] overflow-y-auto no-scrollbar flex flex-col"
             >
               {/* Modal header */}
               <div className="flex items-center justify-between border-b border-white/[0.06] pb-5 mb-6">

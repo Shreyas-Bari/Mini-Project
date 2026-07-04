@@ -389,7 +389,7 @@ export default function Dashboard({ user }) {
         {/* Right Column: Weight & Water Trackers */}
         <div className="flex flex-col gap-6 w-full">
           {/* Water Widget Progress Bar Redesign */}
-          <GlassCard className="flex-1 flex flex-col justify-between p-5 w-full" delay={0.3}>
+          <GlassCard className="flex-1 flex flex-col justify-between p-6 md:p-5 min-h-[240px] md:min-h-[180px] w-full" delay={0.3}>
             <div className="flex items-start justify-between mb-2 w-full">
               <div>
                 <p className="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
