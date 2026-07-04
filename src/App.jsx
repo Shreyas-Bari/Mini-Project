@@ -20,6 +20,15 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeLogDate, setActiveLogDate] = useState(getTodayDateString);
+  
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    const saved = localStorage.getItem('nutritrack_sidebar_collapsed');
+    return saved === 'true';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('nutritrack_sidebar_collapsed', isCollapsed);
+  }, [isCollapsed]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currUser) => {
@@ -83,9 +92,9 @@ export default function App() {
                   }}
                 />
 
-                <Sidebar user={user} />
+                <Sidebar user={user} isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
                 
-                <main className="flex-1 ml-[260px] p-8 min-h-screen relative z-10">
+                <main className={`flex-1 ${isCollapsed ? 'ml-20' : 'ml-64'} p-8 min-h-screen relative z-10 transition-all duration-300 ease-in-out`}>
                   <Routes>
                     <Route path="/" element={<Dashboard user={user} />} />
                     <Route
