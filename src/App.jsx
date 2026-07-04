@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase';
-import { motion } from 'framer-motion';
-import { Menu } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Menu, X } from 'lucide-react';
 
 import Sidebar from './components/Sidebar';
 import Login from './pages/Login';
@@ -17,6 +17,8 @@ import Feedback from './pages/Feedback';
 
 const getTodayDateString = () => new Date().toLocaleDateString('en-CA');
 
+const LATEST_UPDATE_MESSAGE = "Update v1.2: We have integrated the live USDA and Open Food Facts API! Search thousands of foods now.";
+
 export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -28,6 +30,16 @@ export default function App() {
   });
 
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
+
+  const [showUpdateBanner, setShowUpdateBanner] = useState(() => {
+    const saved = localStorage.getItem('nutritrack_dismissed_update');
+    return saved !== LATEST_UPDATE_MESSAGE;
+  });
+
+  const dismissUpdateBanner = () => {
+    localStorage.setItem('nutritrack_dismissed_update', LATEST_UPDATE_MESSAGE);
+    setShowUpdateBanner(false);
+  };
 
   useEffect(() => {
     localStorage.setItem('nutritrack_sidebar_collapsed', isCollapsed);
@@ -57,6 +69,27 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      {/* Global Update Notification Banner */}
+      <AnimatePresence>
+        {user && showUpdateBanner && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20, x: "-50%" }}
+            animate={{ opacity: 1, y: 0, x: "-50%" }}
+            exit={{ opacity: 0, y: -20, x: "-50%" }}
+            className="fixed top-4 left-1/2 z-[100] w-[calc(100%-2rem)] max-w-xl bg-amber-400 text-slate-900 font-medium px-4 py-3 rounded-xl shadow-[0_12px_40px_rgba(251,191,36,0.3)] flex items-center justify-between gap-4 transition-all duration-300"
+          >
+            <span className="text-sm leading-snug">{LATEST_UPDATE_MESSAGE}</span>
+            <button 
+              onClick={dismissUpdateBanner} 
+              className="p-1 rounded-lg text-slate-900 hover:bg-amber-500/50 transition-colors shrink-0 outline-none"
+              aria-label="Close notification"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <Routes>
         <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
         <Route path="/signup" element={user ? <Navigate to="/" /> : <SignUp />} />

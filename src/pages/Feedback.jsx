@@ -178,9 +178,9 @@ export default function Feedback({ user }) {
   };
 
   return (
-    <div className="space-y-8 w-full max-w-4xl mx-auto pb-12 overflow-x-hidden box-border px-1 sm:px-0">
+    <div className="space-y-8 w-full max-w-full md:max-w-4xl mx-auto pb-12 overflow-x-hidden box-border px-4 sm:px-6">
       {/* Page Header */}
-      <div className="w-full">
+      <div className="w-full max-w-full box-border">
         <h1 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
           <MessageSquare className="w-7 h-7 text-accent-teal shrink-0" />
           Feedback
@@ -195,7 +195,7 @@ export default function Feedback({ user }) {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="p-3.5 rounded-xl bg-accent-teal/10 border border-accent-teal/20 text-accent-teal text-xs font-semibold flex items-center gap-2 w-full"
+            className="p-3.5 rounded-xl bg-accent-teal/10 border border-accent-teal/20 text-accent-teal text-xs font-semibold flex items-center gap-2 w-full max-w-full box-border"
           >
             <Sparkles className="w-4 h-4 shrink-0" />
             <span className="flex-1 min-w-0 break-words">{banner}</span>
@@ -204,18 +204,18 @@ export default function Feedback({ user }) {
       </AnimatePresence>
 
       {/* ── Submission Form ── */}
-      <form onSubmit={handleSubmit} className="space-y-6 w-full">
+      <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-full box-border">
         {/* Category selector */}
-        <GlassCard className="space-y-5 w-full" delay={0.1}>
+        <GlassCard className="space-y-5 w-full max-w-full box-border" delay={0.1}>
           <p className="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2 border-b border-white/[0.06] pb-4">
             <MessageSquare className="w-4 h-4 text-accent-teal shrink-0" /> Submit Feedback
           </p>
 
-          <div className="w-full">
+          <div className="w-full max-w-full box-border">
             <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-3 ml-1">
               Category
             </label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-full box-border">
               {FEEDBACK_CATEGORIES.map((cat) => {
                 const CatIcon = cat.icon;
                 const isActive = category === cat.key;
@@ -224,7 +224,7 @@ export default function Feedback({ user }) {
                     key={cat.key}
                     type="button"
                     onClick={() => setCategory(cat.key)}
-                    className={`relative p-4 rounded-xl border text-left cursor-pointer transition-all duration-300 flex items-start gap-3 w-full ${
+                    className={`relative p-4 rounded-xl border text-left cursor-pointer transition-all duration-300 flex items-start gap-3 w-full max-w-full box-border ${
                       isActive
                         ? `${cat.bg} ${cat.border} border shadow-md`
                         : 'bg-white/[0.01] border-white/[0.05] hover:bg-white/[0.03]'
@@ -249,7 +249,7 @@ export default function Feedback({ user }) {
           </div>
 
           {/* Subject */}
-          <div className="w-full">
+          <div className="w-full max-w-full box-border">
             <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-2 ml-1">
               Subject
             </label>
@@ -259,12 +259,12 @@ export default function Feedback({ user }) {
               onChange={(e) => setSubject(e.target.value)}
               placeholder="Brief title for your feedback..."
               maxLength={120}
-              className="w-full box-border bg-white/[0.03] border border-white/[0.08] focus:border-accent-teal focus:ring-1 focus:ring-accent-teal transition-all rounded-xl py-3 px-4 text-sm text-white placeholder-slate-500 outline-none"
+              className="w-full max-w-full box-border bg-white/[0.03] border border-white/[0.08] focus:border-accent-teal focus:ring-1 focus:ring-accent-teal transition-all rounded-xl py-3 px-4 text-sm text-white placeholder-slate-500 outline-none"
             />
           </div>
 
           {/* Message body */}
-          <div className="w-full">
+          <div className="w-full max-w-full box-border">
             <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-2 ml-1">
               Message
             </label>
@@ -274,7 +274,7 @@ export default function Feedback({ user }) {
               placeholder="Describe your feedback in detail..."
               rows={5}
               maxLength={2000}
-              className="w-full box-border bg-white/[0.03] border border-white/[0.08] focus:border-accent-teal focus:ring-1 focus:ring-accent-teal transition-all rounded-xl py-3 px-4 text-sm text-white placeholder-slate-500 outline-none resize-none"
+              className="w-full max-w-full box-border bg-white/[0.03] border border-white/[0.08] focus:border-accent-teal focus:ring-1 focus:ring-accent-teal transition-all rounded-xl py-3 px-4 text-sm text-white placeholder-slate-500 outline-none resize-none"
             />
             <p className="text-[9px] text-slate-500 mt-1.5 ml-1 font-semibold">
               {message.length} / 2000 characters
@@ -285,7 +285,7 @@ export default function Feedback({ user }) {
           <button
             type="submit"
             disabled={submitting || !subject.trim() || !message.trim()}
-            className="w-full py-4 bg-gradient-to-r from-accent-purple to-accent-teal hover:from-accent-purple/90 hover:to-accent-teal/90 text-white font-bold rounded-xl text-sm transition-all shadow-md shadow-accent-purple/20 flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+            className="w-full max-w-full box-border py-4 bg-gradient-to-r from-accent-purple to-accent-teal hover:from-accent-purple/90 hover:to-accent-teal/90 text-white font-bold rounded-xl text-sm transition-all shadow-md shadow-accent-purple/20 flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
             {submitting ? (
               <>
@@ -303,10 +303,10 @@ export default function Feedback({ user }) {
       </form>
 
       {/* ── Feedback History ── */}
-      <GlassCard className="space-y-4 w-full" delay={0.2} hover={false}>
+      <GlassCard className="space-y-4 w-full max-w-full box-border" delay={0.2} hover={false}>
         <button
           onClick={() => setShowHistory(!showHistory)}
-          className="w-full flex items-center justify-between outline-none focus:outline-none"
+          className="w-full max-w-full box-border flex items-center justify-between outline-none focus:outline-none"
         >
           <p className="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2 truncate pr-2">
             <Clock className="w-4 h-4 text-accent-purple shrink-0" /> Your Submission History
@@ -324,13 +324,13 @@ export default function Feedback({ user }) {
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="overflow-hidden w-full"
+              className="overflow-hidden w-full max-w-full box-border"
             >
-              <div className="pt-4 border-t border-white/[0.06] space-y-3 w-full">
+              <div className="pt-4 border-t border-white/[0.06] space-y-3 w-full max-w-full box-border">
                 {historyLoading ? (
                   <div className="py-12 text-center text-slate-500 text-xs animate-pulse">Loading feedback history...</div>
                 ) : feedbackList.length === 0 ? (
-                  <div className="py-12 text-center w-full">
+                  <div className="py-12 text-center w-full max-w-full box-border">
                     <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-500 mb-3 mx-auto">
                       <MessageSquare className="w-5 h-5" />
                     </div>
@@ -350,9 +350,9 @@ export default function Feedback({ user }) {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, delay: idx * 0.04 }}
-                        className="bg-white/[0.02] border border-white/[0.04] p-4 rounded-xl hover:bg-white/[0.04] transition-colors w-full box-border"
+                        className="bg-white/[0.02] border border-white/[0.04] p-4 rounded-xl hover:bg-white/[0.04] transition-colors w-full max-w-full box-border"
                       >
-                        <div className="flex items-start justify-between gap-3 mb-2 w-full">
+                        <div className="flex items-start justify-between gap-3 mb-2 w-full max-w-full box-border">
                           <div className="flex items-center gap-2.5 min-w-0 flex-1">
                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${catConfig.bg} text-${catConfig.accent} border ${catConfig.border}`}>
                               <CatIcon className="w-3.5 h-3.5" />
