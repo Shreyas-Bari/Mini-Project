@@ -218,7 +218,7 @@ export default function Goals({ user }) {
   };
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto pb-12">
+    <div className="space-y-8 max-w-4xl mx-auto pb-12 overflow-x-hidden">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-extrabold text-white tracking-tight">Goals & Profile</h1>

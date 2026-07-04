@@ -932,17 +932,17 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
                           <div className="flex items-center gap-1.5 shrink-0">
                             <button
                               onClick={() => handleEditItem(item)}
-                              className="p-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 transition-colors animate-fade-in"
+                              className="p-2 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 transition-colors animate-fade-in min-w-[44px] min-h-[44px] flex items-center justify-center"
                               title="Edit entry details"
                             >
-                              <Pencil className="w-3.5 h-3.5" />
+                              <Pencil className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => handleDeleteItem(item.id)}
-                              className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors"
+                              className="p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                               title="Remove log entry"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
                         )}
@@ -1003,7 +1003,7 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ type: "spring", stiffness: 400, damping: 30 }}
-              className="relative w-full max-w-2xl bg-slate-950/90 backdrop-blur-2xl border border-white/[0.08] rounded-3xl p-8 shadow-[0_16px_64px_0_rgba(0,0,0,0.6)] z-10"
+              className="relative w-[calc(100%-2rem)] mx-auto max-w-2xl bg-slate-950/90 backdrop-blur-2xl border border-white/[0.08] rounded-3xl p-6 sm:p-8 shadow-[0_16px_64px_0_rgba(0,0,0,0.6)] z-10 max-h-[90vh] overflow-y-auto no-scrollbar"
             >
               {/* Modal header */}
               <div className="flex items-center justify-between border-b border-white/[0.06] pb-5 mb-6">
@@ -1047,7 +1047,7 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => setServingGrams(Math.max(10, servingGrams - 50))}
-                      className="p-3.5 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 text-white transition-colors"
+                      className="p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 text-white transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center shrink-0"
                     >
                       <Minus className="w-5 h-5" />
                     </button>
@@ -1057,11 +1057,11 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
                       min="10"
                       max="2000"
                       onChange={(e) => setServingGrams(Math.max(1, parseInt(e.target.value) || 0))}
-                      className="flex-1 bg-white/[0.03] border border-white/[0.08] focus:border-accent-teal focus:ring-1 focus:ring-accent-teal text-center transition-all duration-300 rounded-xl py-3.5 text-lg font-bold text-white outline-none"
+                      className="flex-1 min-w-0 bg-white/[0.03] border border-white/[0.08] focus:border-accent-teal focus:ring-1 focus:ring-accent-teal text-center transition-all duration-300 rounded-xl py-3 text-base sm:text-lg font-bold text-white outline-none"
                     />
                     <button
                       onClick={() => setServingGrams(servingGrams + 50)}
-                      className="p-3.5 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 text-white transition-colors"
+                      className="p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 text-white transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center shrink-0"
                     >
                       <Plus className="w-5 h-5" />
                     </button>
