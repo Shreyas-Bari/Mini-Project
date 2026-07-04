@@ -6,7 +6,6 @@ import GlassCard from '../components/GlassCard';
 import { 
   Flame, 
   Sparkles, 
-  Droplet, 
   Scale, 
   Coffee, 
   Sun, 
@@ -26,6 +25,7 @@ export default function Dashboard({ user }) {
   const [greeting, setGreeting] = useState('');
   const [dateStr, setDateStr] = useState('');
   const [streak, setStreak] = useState(0);
+  const [gender, setGender] = useState(null);
   const [goals, setGoals] = useState({
     targetCalories: 2000,
     targetProtein: 140,
@@ -43,7 +43,7 @@ export default function Dashboard({ user }) {
   });
 
   const [meals, setMeals] = useState([]);
-  const [waterGlasses, setWaterGlasses] = useState(0);
+  const [waterLiters, setWaterLiters] = useState(0.0);
   const [weightLogs, setWeightLogs] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -117,6 +117,9 @@ export default function Dashboard({ user }) {
         const userDoc = await getDoc(doc(db, "users", user.uid));
         if (userDoc.exists()) {
           const data = userDoc.data();
+          if (data.profile && data.profile.gender) {
+            setGender(data.profile.gender);
+          }
           if (data.goals) {
             setGoals({
               targetCalories: data.goals.targetCalories || 2000,
@@ -157,7 +160,7 @@ export default function Dashboard({ user }) {
 
         const waterDoc = await getDoc(doc(db, "users", user.uid, "waterLogs", today));
         if (waterDoc.exists()) {
-          setWaterGlasses(waterDoc.data().glasses || 0);
+          setWaterLiters(waterDoc.data().liters || 0.0);
         }
 
         const weightRef = collection(db, "users", user.uid, "weightLogs");
@@ -178,13 +181,14 @@ export default function Dashboard({ user }) {
     computeAndPersistStreak();
   }, [user.uid]);
 
-  const handleWaterToggle = async (glassesCount) => {
+  const handleWaterToggle = async (newLiters) => {
     const today = getTodayDateString();
-    setWaterGlasses(glassesCount);
+    setWaterLiters(newLiters);
     try {
+      // We keep 'glasses' roughly aligned if another component uses it, but logic centers on liters now
       await setDoc(doc(db, "users", user.uid, "waterLogs", today), {
-        glasses: glassesCount,
-        liters: parseFloat((glassesCount * 0.25).toFixed(2)),
+        liters: parseFloat(newLiters.toFixed(2)),
+        glasses: Math.round(newLiters / 0.25),
         updatedAt: serverTimestamp()
       }, { merge: true });
     } catch (e) {
@@ -253,6 +257,10 @@ export default function Dashboard({ user }) {
       icon: Leaf
     }
   ];
+
+  // Dynamically configure water target
+  const waterTarget = gender === 'Male' ? 4.0 : gender === 'Female' ? 3.0 : 3.5;
+  const waterPercentage = Math.min((waterLiters / waterTarget) * 100, 100);
 
   return (
     <div className="space-y-6 md:space-y-8 overflow-x-hidden">
@@ -380,54 +388,47 @@ export default function Dashboard({ user }) {
 
         {/* Right Column: Weight & Water Trackers */}
         <div className="flex flex-col gap-6 w-full">
-          {/* Water Widget */}
+          {/* Water Widget Progress Bar Redesign */}
           <GlassCard className="flex-1 flex flex-col justify-between p-5 w-full" delay={0.3}>
-            <div className="flex items-center justify-between mb-4 w-full">
+            <div className="flex items-start justify-between mb-2 w-full">
               <div>
-                <p className="text-xs font-bold uppercase text-slate-400 tracking-wider">Water Intake</p>
-                <p className="text-lg sm:text-xl font-extrabold text-slate-100 mt-1">{(waterGlasses * 0.25).toFixed(2)} L</p>
+                <p className="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
+                  <Droplets className="w-3.5 h-3.5 text-accent-blue" /> Water Intake
+                </p>
+                <p className="text-[10px] text-slate-500 mt-1.5 font-bold uppercase tracking-widest">
+                  Target: {waterTarget.toFixed(1)}L <span className="mx-1 text-slate-600">|</span> Consumed: {waterLiters.toFixed(1)}L
+                </p>
               </div>
-              <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 ${
-                waterGlasses >= 6 ? 'bg-accent-green/10 text-accent-green border border-accent-green/20' : 
-                waterGlasses >= 3 ? 'bg-accent-yellow/10 text-accent-yellow border border-accent-yellow/20' : 
-                'bg-accent-blue/10 text-accent-blue border border-accent-blue/20'
-              }`}>
-                {waterGlasses} / 8 <span className="hidden sm:inline">Glasses</span>
-              </span>
+              <p className="text-xl sm:text-2xl font-extrabold text-slate-100 mt-0.5 shrink-0">
+                {waterLiters.toFixed(1)} <span className="text-sm font-bold text-slate-400">L</span>
+              </p>
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-1 sm:gap-2.5 py-4 w-full overflow-hidden">
-              {[...Array(8)].map((_, i) => {
-                const filled = i < waterGlasses;
-                return (
-                  <motion.button
-                    key={i}
-                    whileHover={{ scale: 1.15 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => handleWaterToggle(filled ? i : i + 1)}
-                    className="focus:outline-none p-1 shrink-0 flex-1 flex justify-center min-w-[24px]"
-                    aria-label={`Toggle glass ${i + 1}`}
-                  >
-                    <Droplet className={`w-5 h-5 sm:w-6 lg:w-7 sm:h-6 lg:h-7 transition-colors duration-300 ${filled ? 'fill-accent-blue text-accent-blue drop-shadow-[0_0_8px_rgba(96,165,250,0.6)]' : 'text-slate-600 hover:text-accent-blue/60'}`} />
-                  </motion.button>
-                );
-              })}
+            <div className="py-4 w-full">
+              <div className="w-full h-4 bg-white/10 rounded-full overflow-hidden relative shadow-inner">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${waterPercentage}%` }}
+                  transition={{ duration: 1, ease: "easeOut" }}
+                  className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 shadow-[0_0_12px_rgba(34,211,238,0.5)]"
+                />
+              </div>
             </div>
             
             <div className="flex flex-wrap sm:flex-nowrap gap-2 w-full mt-2">
               <button
-                onClick={() => handleWaterToggle(Math.max(0, waterGlasses - 1))}
+                onClick={() => handleWaterToggle(Math.max(0, waterLiters - 0.5))}
                 className="flex-1 min-w-[100px] min-h-[44px] rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center gap-1.5 text-xs font-semibold text-white transition-colors"
-                aria-label="Remove a glass of water"
+                aria-label="Remove 0.5L of water"
               >
-                <Minus className="w-4 h-4 shrink-0" /> <span className="inline">Remove</span>
+                <Minus className="w-4 h-4 shrink-0" /> <span className="inline">0.5L</span>
               </button>
               <button
-                onClick={() => handleWaterToggle(Math.max(8, waterGlasses + 1))}
-                className="flex-1 min-w-[100px] min-h-[44px] rounded-xl bg-accent-blue/10 border border-accent-blue/20 hover:bg-accent-blue/20 flex items-center justify-center gap-1.5 text-xs font-semibold text-accent-blue transition-colors"
-                aria-label="Add a glass of water"
+                onClick={() => handleWaterToggle(waterLiters + 0.5)}
+                className="flex-1 min-w-[100px] min-h-[44px] rounded-xl bg-accent-blue/10 border border-accent-blue/20 hover:bg-accent-blue/20 flex items-center justify-center gap-1.5 text-xs font-semibold text-accent-blue transition-colors shadow-lg shadow-accent-blue/10"
+                aria-label="Add 0.5L of water"
               >
-                <Plus className="w-4 h-4 shrink-0" /> <span className="inline">Add</span>
+                <Plus className="w-4 h-4 shrink-0" /> <span className="inline">0.5L</span>
               </button>
             </div>
           </GlassCard>
