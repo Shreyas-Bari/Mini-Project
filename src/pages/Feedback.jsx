@@ -178,11 +178,11 @@ export default function Feedback({ user }) {
   };
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto pb-12">
+    <div className="space-y-8 w-full max-w-4xl mx-auto pb-12 overflow-x-hidden box-border px-1 sm:px-0">
       {/* Page Header */}
-      <div>
+      <div className="w-full">
         <h1 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
-          <MessageSquare className="w-7 h-7 text-accent-teal" />
+          <MessageSquare className="w-7 h-7 text-accent-teal shrink-0" />
           Feedback
         </h1>
         <p className="text-slate-400 text-sm mt-1">Report issues, suggest features, or share your experience</p>
@@ -195,27 +195,27 @@ export default function Feedback({ user }) {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="p-3.5 rounded-xl bg-accent-teal/10 border border-accent-teal/20 text-accent-teal text-xs font-semibold flex items-center gap-2"
+            className="p-3.5 rounded-xl bg-accent-teal/10 border border-accent-teal/20 text-accent-teal text-xs font-semibold flex items-center gap-2 w-full"
           >
-            <Sparkles className="w-4 h-4" />
-            <span>{banner}</span>
+            <Sparkles className="w-4 h-4 shrink-0" />
+            <span className="flex-1 min-w-0 break-words">{banner}</span>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* ── Submission Form ── */}
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6 w-full">
         {/* Category selector */}
-        <GlassCard className="space-y-5" delay={0.1}>
+        <GlassCard className="space-y-5 w-full" delay={0.1}>
           <p className="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2 border-b border-white/[0.06] pb-4">
-            <MessageSquare className="w-4 h-4 text-accent-teal" /> Submit Feedback
+            <MessageSquare className="w-4 h-4 text-accent-teal shrink-0" /> Submit Feedback
           </p>
 
-          <div>
+          <div className="w-full">
             <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-3 ml-1">
               Category
             </label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
               {FEEDBACK_CATEGORIES.map((cat) => {
                 const CatIcon = cat.icon;
                 const isActive = category === cat.key;
@@ -224,7 +224,7 @@ export default function Feedback({ user }) {
                     key={cat.key}
                     type="button"
                     onClick={() => setCategory(cat.key)}
-                    className={`relative p-4 rounded-xl border text-left cursor-pointer transition-all duration-300 flex items-start gap-3 ${
+                    className={`relative p-4 rounded-xl border text-left cursor-pointer transition-all duration-300 flex items-start gap-3 w-full ${
                       isActive
                         ? `${cat.bg} ${cat.border} border shadow-md`
                         : 'bg-white/[0.01] border-white/[0.05] hover:bg-white/[0.03]'
@@ -235,12 +235,12 @@ export default function Feedback({ user }) {
                     }`}>
                       <CatIcon className="w-4.5 h-4.5" />
                     </div>
-                    <div>
-                      <p className={`text-xs font-bold leading-none ${isActive ? 'text-white' : 'text-slate-300'}`}>{cat.label}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-xs font-bold leading-none truncate ${isActive ? 'text-white' : 'text-slate-300'}`}>{cat.label}</p>
                       <p className="text-[10px] text-slate-500 mt-1.5 leading-tight">{cat.desc}</p>
                     </div>
                     {isActive && (
-                      <div className={`absolute top-3 right-3 w-2 h-2 rounded-full bg-${cat.accent} shadow-[0_0_8px_currentColor]`} />
+                      <div className={`absolute top-3 right-3 w-2 h-2 rounded-full bg-${cat.accent} shadow-[0_0_8px_currentColor] shrink-0`} />
                     )}
                   </button>
                 );
@@ -249,7 +249,7 @@ export default function Feedback({ user }) {
           </div>
 
           {/* Subject */}
-          <div>
+          <div className="w-full">
             <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-2 ml-1">
               Subject
             </label>
@@ -259,12 +259,12 @@ export default function Feedback({ user }) {
               onChange={(e) => setSubject(e.target.value)}
               placeholder="Brief title for your feedback..."
               maxLength={120}
-              className="w-full bg-white/[0.03] border border-white/[0.08] focus:border-accent-teal focus:ring-1 focus:ring-accent-teal transition-all rounded-xl py-3 px-4 text-sm text-white placeholder-slate-500 outline-none"
+              className="w-full box-border bg-white/[0.03] border border-white/[0.08] focus:border-accent-teal focus:ring-1 focus:ring-accent-teal transition-all rounded-xl py-3 px-4 text-sm text-white placeholder-slate-500 outline-none"
             />
           </div>
 
           {/* Message body */}
-          <div>
+          <div className="w-full">
             <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-2 ml-1">
               Message
             </label>
@@ -274,7 +274,7 @@ export default function Feedback({ user }) {
               placeholder="Describe your feedback in detail..."
               rows={5}
               maxLength={2000}
-              className="w-full bg-white/[0.03] border border-white/[0.08] focus:border-accent-teal focus:ring-1 focus:ring-accent-teal transition-all rounded-xl py-3 px-4 text-sm text-white placeholder-slate-500 outline-none resize-none"
+              className="w-full box-border bg-white/[0.03] border border-white/[0.08] focus:border-accent-teal focus:ring-1 focus:ring-accent-teal transition-all rounded-xl py-3 px-4 text-sm text-white placeholder-slate-500 outline-none resize-none"
             />
             <p className="text-[9px] text-slate-500 mt-1.5 ml-1 font-semibold">
               {message.length} / 2000 characters
@@ -289,12 +289,12 @@ export default function Feedback({ user }) {
           >
             {submitting ? (
               <>
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
                 Submitting...
               </>
             ) : (
               <>
-                <Send className="w-5 h-5" />
+                <Send className="w-5 h-5 shrink-0" />
                 Submit Feedback
               </>
             )}
@@ -303,15 +303,15 @@ export default function Feedback({ user }) {
       </form>
 
       {/* ── Feedback History ── */}
-      <GlassCard className="space-y-4" delay={0.2} hover={false}>
+      <GlassCard className="space-y-4 w-full" delay={0.2} hover={false}>
         <button
           onClick={() => setShowHistory(!showHistory)}
-          className="w-full flex items-center justify-between"
+          className="w-full flex items-center justify-between outline-none focus:outline-none"
         >
-          <p className="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2">
-            <Clock className="w-4 h-4 text-accent-purple" /> Your Submission History
+          <p className="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2 truncate pr-2">
+            <Clock className="w-4 h-4 text-accent-purple shrink-0" /> Your Submission History
           </p>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">{feedbackList.length} submissions</span>
             {showHistory ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
           </div>
@@ -324,13 +324,13 @@ export default function Feedback({ user }) {
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="overflow-hidden"
+              className="overflow-hidden w-full"
             >
-              <div className="pt-4 border-t border-white/[0.06] space-y-3">
+              <div className="pt-4 border-t border-white/[0.06] space-y-3 w-full">
                 {historyLoading ? (
                   <div className="py-12 text-center text-slate-500 text-xs animate-pulse">Loading feedback history...</div>
                 ) : feedbackList.length === 0 ? (
-                  <div className="py-12 text-center">
+                  <div className="py-12 text-center w-full">
                     <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-500 mb-3 mx-auto">
                       <MessageSquare className="w-5 h-5" />
                     </div>
@@ -350,28 +350,28 @@ export default function Feedback({ user }) {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, delay: idx * 0.04 }}
-                        className="bg-white/[0.02] border border-white/[0.04] p-4 rounded-xl hover:bg-white/[0.04] transition-colors"
+                        className="bg-white/[0.02] border border-white/[0.04] p-4 rounded-xl hover:bg-white/[0.04] transition-colors w-full box-border"
                       >
-                        <div className="flex items-start justify-between gap-3 mb-2">
+                        <div className="flex items-start justify-between gap-3 mb-2 w-full">
                           <div className="flex items-center gap-2.5 min-w-0 flex-1">
                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${catConfig.bg} text-${catConfig.accent} border ${catConfig.border}`}>
                               <CatIcon className="w-3.5 h-3.5" />
                             </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="text-sm font-bold text-white truncate">{fb.subject}</p>
-                              <p className="text-[10px] text-slate-500 mt-0.5 uppercase tracking-wider font-semibold">
+                            <div className="min-w-0 flex-1 pr-2">
+                              <p className="text-sm font-bold text-white truncate w-full">{fb.subject}</p>
+                              <p className="text-[10px] text-slate-500 mt-0.5 uppercase tracking-wider font-semibold truncate w-full">
                                 {catConfig.label} · {formatTimestamp(fb.createdAt)}
                               </p>
                             </div>
                           </div>
 
                           <span className={`shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider border ${statusConfig.cls}`}>
-                            <StatusIcon className="w-3 h-3" />
+                            <StatusIcon className="w-3 h-3 shrink-0" />
                             {statusConfig.label}
                           </span>
                         </div>
 
-                        <p className="text-xs text-slate-400 leading-relaxed mt-2 pl-[42px]">
+                        <p className="text-xs text-slate-400 leading-relaxed mt-2 sm:pl-[42px] break-words w-full">
                           {fb.message}
                         </p>
                       </motion.div>

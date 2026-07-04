@@ -255,7 +255,7 @@ export default function Dashboard({ user }) {
   ];
 
   return (
-    <div className="space-y-6 md:space-y-8">
+    <div className="space-y-6 md:space-y-8 overflow-x-hidden">
       {/* Top Header Row */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -331,7 +331,7 @@ export default function Dashboard({ user }) {
         </GlassCard>
 
         {/* Middle Column: Macronutrient Matrix Grid */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4 w-full">
           {macroMatrix.map((macro, i) => {
             const pct = Math.min((macro.value / macro.target) * 100, 100);
             const MacroIcon = macro.icon;
@@ -341,11 +341,11 @@ export default function Dashboard({ user }) {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.15 + i * 0.08, ease: [0.33, 1, 0.68, 1] }}
-                className={`relative overflow-hidden bg-slate-950/40 backdrop-blur-xl border border-white/[0.06] border-t-2 ${macro.borderColor} rounded-2xl p-4 sm:p-5 shadow-glass-strong hover:scale-[1.01] transition-all duration-300`}
+                className={`relative overflow-hidden bg-slate-950/40 backdrop-blur-xl border border-white/[0.06] border-t-2 ${macro.borderColor} rounded-2xl p-4 sm:p-5 shadow-glass-strong hover:scale-[1.01] transition-all duration-300 w-full`}
               >
                 <div className={`absolute top-0 left-0 right-0 h-16 bg-gradient-to-b ${macro.gradient} pointer-events-none`} />
                 
-                <div className="relative z-10">
+                <div className="relative z-10 w-full">
                   <div className="flex items-center justify-between mb-3 sm:mb-4">
                     <MacroIcon className={`w-4 h-4 sm:w-5 sm:h-5 text-${macro.color}`} />
                     <span className={`text-[9px] font-bold uppercase tracking-widest text-${macro.color}`}>
@@ -353,15 +353,15 @@ export default function Dashboard({ user }) {
                     </span>
                   </div>
                   
-                  <p className="text-xl sm:text-2xl font-black text-slate-100 leading-none">
+                  <p className="text-xl sm:text-2xl font-black text-slate-100 leading-none truncate">
                     {macro.value}
                     <span className="text-xs text-slate-400 font-bold ml-0.5">{macro.unit}</span>
                   </p>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1.5">
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1.5 truncate">
                     {macro.label}
                   </p>
                   
-                  <div className="mt-3 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                  <div className="mt-3 h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${pct}%` }}
@@ -369,7 +369,7 @@ export default function Dashboard({ user }) {
                       className={`h-full bg-${macro.color} rounded-full shadow-lg shadow-${macro.color}/20`}
                     />
                   </div>
-                  <p className="text-[9px] text-slate-500 font-semibold mt-1.5 truncate">
+                  <p className="text-[9px] text-slate-500 font-semibold mt-1.5 truncate w-full">
                     of {macro.target}{macro.unit} target
                   </p>
                 </div>
@@ -379,10 +379,10 @@ export default function Dashboard({ user }) {
         </div>
 
         {/* Right Column: Weight & Water Trackers */}
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 w-full">
           {/* Water Widget */}
-          <GlassCard className="flex-1 flex flex-col justify-between p-5" delay={0.3}>
-            <div className="flex items-center justify-between mb-4">
+          <GlassCard className="flex-1 flex flex-col justify-between p-5 w-full" delay={0.3}>
+            <div className="flex items-center justify-between mb-4 w-full">
               <div>
                 <p className="text-xs font-bold uppercase text-slate-400 tracking-wider">Water Intake</p>
                 <p className="text-lg sm:text-xl font-extrabold text-slate-100 mt-1">{(waterGlasses * 0.25).toFixed(2)} L</p>
@@ -396,7 +396,7 @@ export default function Dashboard({ user }) {
               </span>
             </div>
 
-            <div className="flex items-center justify-between gap-1 sm:gap-2.5 py-4 w-full">
+            <div className="flex flex-wrap items-center justify-between gap-1 sm:gap-2.5 py-4 w-full overflow-hidden">
               {[...Array(8)].map((_, i) => {
                 const filled = i < waterGlasses;
                 return (
@@ -405,36 +405,36 @@ export default function Dashboard({ user }) {
                     whileHover={{ scale: 1.15 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={() => handleWaterToggle(filled ? i : i + 1)}
-                    className="focus:outline-none p-1 shrink-0"
+                    className="focus:outline-none p-1 shrink-0 flex-1 flex justify-center min-w-[24px]"
                     aria-label={`Toggle glass ${i + 1}`}
                   >
-                    <Droplet className={`w-5 h-5 sm:w-7 sm:h-7 transition-colors duration-300 ${filled ? 'fill-accent-blue text-accent-blue drop-shadow-[0_0_8px_rgba(96,165,250,0.6)]' : 'text-slate-600 hover:text-accent-blue/60'}`} />
+                    <Droplet className={`w-5 h-5 sm:w-6 lg:w-7 sm:h-6 lg:h-7 transition-colors duration-300 ${filled ? 'fill-accent-blue text-accent-blue drop-shadow-[0_0_8px_rgba(96,165,250,0.6)]' : 'text-slate-600 hover:text-accent-blue/60'}`} />
                   </motion.button>
                 );
               })}
             </div>
             
-            <div className="flex gap-2">
+            <div className="flex flex-wrap sm:flex-nowrap gap-2 w-full mt-2">
               <button
                 onClick={() => handleWaterToggle(Math.max(0, waterGlasses - 1))}
-                className="flex-1 min-h-[44px] rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center gap-1.5 text-xs font-semibold text-white transition-colors"
+                className="flex-1 min-w-[100px] min-h-[44px] rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center gap-1.5 text-xs font-semibold text-white transition-colors"
                 aria-label="Remove a glass of water"
               >
-                <Minus className="w-4 h-4 shrink-0" /> <span className="hidden xs:inline">Remove</span>
+                <Minus className="w-4 h-4 shrink-0" /> <span className="inline">Remove</span>
               </button>
               <button
-                onClick={() => handleWaterToggle(Math.min(8, waterGlasses + 1))}
-                className="flex-1 min-h-[44px] rounded-xl bg-accent-blue/10 border border-accent-blue/20 hover:bg-accent-blue/20 flex items-center justify-center gap-1.5 text-xs font-semibold text-accent-blue transition-colors"
+                onClick={() => handleWaterToggle(Math.max(8, waterGlasses + 1))}
+                className="flex-1 min-w-[100px] min-h-[44px] rounded-xl bg-accent-blue/10 border border-accent-blue/20 hover:bg-accent-blue/20 flex items-center justify-center gap-1.5 text-xs font-semibold text-accent-blue transition-colors"
                 aria-label="Add a glass of water"
               >
-                <Plus className="w-4 h-4 shrink-0" /> <span className="hidden xs:inline">Add</span>
+                <Plus className="w-4 h-4 shrink-0" /> <span className="inline">Add</span>
               </button>
             </div>
           </GlassCard>
 
           {/* Weight Widget */}
-          <GlassCard className="flex-1 flex flex-col justify-center p-5" delay={0.4}>
-            <div className="flex items-center gap-4">
+          <GlassCard className="flex-1 flex flex-col justify-center p-5 w-full" delay={0.4}>
+            <div className="flex items-center gap-4 w-full">
               <div className="w-12 h-12 rounded-2xl bg-accent-teal/10 border border-accent-teal/20 flex items-center justify-center text-accent-teal shrink-0">
                 <Scale className="w-6 h-6" />
               </div>
@@ -466,8 +466,8 @@ export default function Dashboard({ user }) {
       </div>
 
       {/* Daily Meals List Journal */}
-      <GlassCard delay={0.5} className="p-4 sm:p-6">
-        <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/[0.06]">
+      <GlassCard delay={0.5} className="p-4 sm:p-6 w-full">
+        <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/[0.06] w-full">
           <p className="text-sm sm:text-base font-extrabold text-white tracking-tight flex items-center gap-2">
             <Utensils className="w-4 h-4 text-accent-purple shrink-0" />
             Today's Journal
@@ -481,7 +481,7 @@ export default function Dashboard({ user }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="py-12 flex flex-col items-center text-center justify-center"
+              className="py-12 flex flex-col items-center text-center justify-center w-full"
             >
               <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-500 mb-3">
                 <Utensils className="w-5 h-5" />
@@ -490,7 +490,7 @@ export default function Dashboard({ user }) {
               <p className="text-xs text-slate-500 mt-1 max-w-[240px]">Navigate to Food Search in the sidebar to search and log your meals.</p>
             </motion.div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 w-full">
               {meals.map((meal) => {
                 const IconComponent = mealIcons[meal.mealType?.toLowerCase()] || Utensils;
                 return (
@@ -500,7 +500,7 @@ export default function Dashboard({ user }) {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="flex items-center gap-3 sm:gap-4 bg-white/[0.02] border border-white/[0.04] p-3 sm:p-4 rounded-xl hover:bg-white/[0.04] transition-colors duration-200"
+                    className="flex items-center gap-3 sm:gap-4 bg-white/[0.02] border border-white/[0.04] p-3 sm:p-4 rounded-xl hover:bg-white/[0.04] transition-colors duration-200 w-full"
                   >
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
                       meal.mealType?.toLowerCase() === 'breakfast' ? 'bg-accent-purple/10 text-accent-purple border border-accent-purple/20' :
