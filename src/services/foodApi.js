@@ -20,7 +20,7 @@ import { app } from '../firebase';
 const functions = getFunctions(app);
 
 /* ══════════════════════════════════════════════════════════════
-   INDIAN CONTEXT KEYWORD NORMALIZATION
+   INDIAN CONTEXT KEYWORD NORMALIZATION & TOKENIZATION
    ══════════════════════════════════════════════════════════════ */
 export function normalizeQuery(query) {
   let q = query.toLowerCase().trim();
@@ -31,8 +31,39 @@ export function normalizeQuery(query) {
   return q;
 }
 
+function getSearchTokens(query) {
+  const q = query.toLowerCase().trim();
+  const tokens = new Set(q.match(/\b\w+\b/g) || []);
+  
+  // Inject common synonyms for Indian foods
+  if (tokens.has('bottle') && tokens.has('gourd')) tokens.add('lauki');
+  if (tokens.has('bitter') && tokens.has('gourd')) tokens.add('karela');
+  if (tokens.has('ridge') && tokens.has('gourd')) tokens.add('turai');
+  if (tokens.has('lady') && tokens.has('finger')) { tokens.add('okra'); tokens.add('bhindi'); }
+  if (tokens.has('okra')) tokens.add('bhindi');
+  if (tokens.has('cottage') && tokens.has('cheese')) tokens.add('paneer');
+  if (tokens.has('clarified') && tokens.has('butter')) tokens.add('ghee');
+  if (tokens.has('panner') || tokens.has('paner') || tokens.has('panier')) tokens.add('paneer');
+  
+  return Array.from(tokens).filter(t => t.length > 2); // only significant tokens
+}
+
+function isRelevantMatch(food, queryTokens) {
+  if (queryTokens.length === 0) return true; // fallback if query had no significant tokens
+  
+  const title = (food.name || '').toLowerCase();
+  const brand = (food.brand || '').toLowerCase();
+  const cat = (food.category || '').toLowerCase();
+  const targetString = `${title} ${brand} ${cat}`;
+  
+  for (const token of queryTokens) {
+    if (targetString.includes(token)) return true;
+  }
+  return false;
+}
+
 /* ══════════════════════════════════════════════════════════════
-   STRICT MATHEMATICAL VALIDATION (Hard-Drop Rule)
+   STRICT MATHEMATICAL VALIDATION (Hard-Drop Rule & Zero-Macro Loophole)
    ══════════════════════════════════════════════════════════════ */
 function isValidFood(food) {
   const isInvalid = (val) => val === null || val === undefined || val === '' || isNaN(Number(val));
@@ -46,10 +77,19 @@ function isValidFood(food) {
   const carb = Number(food.carbs);
   const fat = Number(food.fat);
   
+  // Close the Zero-Macro Loophole: Drop completely empty records unless it's water/diet soda
+  if (cals === 0 && pro === 0 && carb === 0 && fat === 0) {
+    const title = (food.name || '').toLowerCase();
+    const cat = (food.category || '').toLowerCase();
+    if (!title.includes('water') && !cat.includes('water') && !title.includes('diet soda') && !cat.includes('diet soda')) {
+      return false; // Zero-Macro loophole closed
+    }
+    return true; // Pass valid zero-calorie liquids
+  }
+  
   // Calculated Calories = (Protein * 4) + (Carbohydrates * 4) + (Fat * 9)
   const calculatedCals = (pro * 4) + (carb * 4) + (fat * 9);
   
-  if (calculatedCals === 0 && cals === 0) return true;
   if (calculatedCals === 0 && cals > 0) return false;
   
   const variance = Math.abs(cals - calculatedCals) / Math.max(cals, calculatedCals);
@@ -239,7 +279,7 @@ function titleCase(str) {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-function normalizeUSDAResults(foods, originalQuery, activeCategory) {
+function normalizeUSDAResults(foods, originalQuery, activeCategory, queryTokens) {
   return foods
     .map((food) => ({
       id: `usda_${food.fdcId}`,
@@ -253,10 +293,10 @@ function normalizeUSDAResults(foods, originalQuery, activeCategory) {
       fat: extractUSDANutrient(food.foodNutrients, 'Total lipid (fat)'),
       fiber: extractUSDANutrient(food.foodNutrients, 'Fiber, total dietary'),
     }))
-    .filter((f) => isValidFood(f) && isContextuallyValid(f, originalQuery, activeCategory));
+    .filter((f) => isValidFood(f) && isContextuallyValid(f, originalQuery, activeCategory) && isRelevantMatch(f, queryTokens));
 }
 
-export async function searchUSDA(query, activeCategory = 'All') {
+export async function searchUSDA(query, activeCategory = 'All', queryTokens = []) {
   if (!query || query.trim().length < 2) return [];
 
   try {
@@ -264,21 +304,21 @@ export async function searchUSDA(query, activeCategory = 'All') {
     const result = await searchFn({ query: query.trim() });
     const foods = result.data?.foods || [];
     // Just in case backend validation fails or is outdated, validate here too
-    return foods.filter(f => isValidFood(f) && isContextuallyValid(f, query, activeCategory));
+    return foods.filter(f => isValidFood(f) && isContextuallyValid(f, query, activeCategory) && isRelevantMatch(f, queryTokens));
   } catch (cloudFnError) {
     console.warn(
       'Cloud Function unavailable, attempting development fallback:',
       cloudFnError.code || cloudFnError.message
     );
     if (import.meta.env.DEV) {
-      return searchUSDADirect(query, activeCategory);
+      return searchUSDADirect(query, activeCategory, queryTokens);
     }
     console.error('USDA search unavailable — Cloud Function not deployed.');
     return [];
   }
 }
 
-async function searchUSDADirect(query, activeCategory) {
+async function searchUSDADirect(query, activeCategory, queryTokens) {
   if (!import.meta.env.DEV) return [];
 
   const apiKey = import.meta.env.VITE_USDA_API_KEY;
@@ -300,7 +340,7 @@ async function searchUSDADirect(query, activeCategory) {
     }
 
     const data = await response.json();
-    return normalizeUSDAResults(data.foods || [], query, activeCategory);
+    return normalizeUSDAResults(data.foods || [], query, activeCategory, queryTokens);
   } catch (error) {
     console.error('Direct USDA search error:', error);
     return [];
@@ -311,7 +351,7 @@ async function searchUSDADirect(query, activeCategory) {
    Open Food Facts Search
    ══════════════════════════════════════════════════════════════ */
 
-function normalizeOFFResults(products, originalQuery, activeCategory) {
+function normalizeOFFResults(products, originalQuery, activeCategory, queryTokens) {
   return products
     .filter((p) => p.product_name)
     .map((product) => {
@@ -338,10 +378,10 @@ function normalizeOFFResults(products, originalQuery, activeCategory) {
         fiber: Math.round((n.fiber_100g || 0) * 10) / 10,
       };
     })
-    .filter((f) => isValidFood(f) && isContextuallyValid(f, originalQuery, activeCategory)); // Apply strict validation
+    .filter((f) => isValidFood(f) && isContextuallyValid(f, originalQuery, activeCategory) && isRelevantMatch(f, queryTokens));
 }
 
-export async function searchOpenFoodFacts(query, activeCategory = 'All') {
+export async function searchOpenFoodFacts(query, activeCategory = 'All', queryTokens = []) {
   if (!query || query.trim().length < 2) return [];
 
   try {
@@ -371,7 +411,7 @@ export async function searchOpenFoodFacts(query, activeCategory = 'All') {
     }
 
     const data = await response.json();
-    return normalizeOFFResults(data.products || [], query, activeCategory);
+    return normalizeOFFResults(data.products || [], query, activeCategory, queryTokens);
   } catch (error) {
     if (error.name === 'AbortError') {
       console.warn('Open Food Facts request timed out');
@@ -395,12 +435,13 @@ export async function searchAllAPIs(query, activeCategory = 'All') {
   console.log("🚀 CURRENT SEARCH URL TARGET:", usingEmulator ? "http://localhost:5001" : "PRODUCTION LIVE API");
 
   const normalizedQuery = normalizeQuery(query);
+  const queryTokens = getSearchTokens(normalizedQuery);
 
   const errors = [];
 
   const [usdaResult, offResult] = await Promise.allSettled([
-    searchUSDA(normalizedQuery, activeCategory),
-    searchOpenFoodFacts(normalizedQuery, activeCategory),
+    searchUSDA(normalizedQuery, activeCategory, queryTokens),
+    searchOpenFoodFacts(normalizedQuery, activeCategory, queryTokens),
   ]);
 
   const usda = usdaResult.status === 'fulfilled' ? usdaResult.value : [];

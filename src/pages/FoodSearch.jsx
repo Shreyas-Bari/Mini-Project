@@ -476,10 +476,33 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
           {/* Food title, source badge & calorie count */}
           <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-bold text-slate-100 leading-snug">{food.name}</h3>
-              {food.brand && (
-                <p className="text-[10px] text-slate-500 mt-0.5 truncate">{food.brand}</p>
-              )}
+              <div className="flex flex-wrap gap-1.5 items-center">
+                <h3 className="text-sm font-bold text-slate-100 leading-snug">{food.name}</h3>
+                
+                {source === 'Local' && (
+                  <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs px-2 py-0.5 rounded-md font-medium whitespace-nowrap">
+                    Verified Baseline
+                  </span>
+                )}
+
+                {source !== 'Local' && (
+                  (() => {
+                    const categoryUpper = (food.category || '').toUpperCase();
+                    const isCommercialCategory = 
+                      categoryUpper.includes('FROZEN DINNERS & ENTREES') ||
+                      categoryUpper.includes('SEASONING MIXES') ||
+                      categoryUpper.includes('PREPARED WRAPS AND BURRITOS');
+                      
+                    if (isCommercialCategory) return null;
+
+                    return (
+                      <span className={food.brand ? "bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 text-xs px-2 py-0.5 rounded-md font-semibold whitespace-nowrap" : "bg-slate-500/10 text-slate-300 border border-slate-500/20 text-xs px-2 py-0.5 rounded-md font-semibold whitespace-nowrap"}>
+                        {food.brand ? (food.brand.length > 25 ? food.brand.substring(0, 25) + '...' : food.brand) : "Branded Packaged"}
+                      </span>
+                    );
+                  })()
+                )}
+              </div>
               <div className="flex items-center gap-1.5 mt-1.5">
                 <span className={`inline-flex items-center gap-1 text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-widest border ${badge.cls}`}>
                   <BadgeIcon className="w-2.5 h-2.5" />

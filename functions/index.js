@@ -49,7 +49,7 @@ function formatFoodName(name) {
 }
 
 /* ──────────────────────────────────────────────────────────────
-   STRICT MATHEMATICAL VALIDATION (Hard-Drop Rule)
+   STRICT MATHEMATICAL VALIDATION (Hard-Drop Rule & Zero-Macro Loophole)
    Calculates expected calories from macros and drops invalid data.
    ────────────────────────────────────────────────────────────── */
 function isValidFood(food) {
@@ -64,10 +64,19 @@ function isValidFood(food) {
   const carb = Number(food.carbs);
   const fat = Number(food.fat);
   
+  // Close the Zero-Macro Loophole: Drop completely empty records unless it's water/diet soda
+  if (cals === 0 && pro === 0 && carb === 0 && fat === 0) {
+    const title = (food.name || '').toLowerCase();
+    const cat = (food.category || '').toLowerCase();
+    if (!title.includes('water') && !cat.includes('water') && !title.includes('diet soda') && !cat.includes('diet soda')) {
+      return false;
+    }
+    return true; // Pass valid zero-calorie liquids
+  }
+  
   // Calculated Calories = (Protein * 4) + (Carbohydrates * 4) + (Fat * 9)
   const calculatedCals = (pro * 4) + (carb * 4) + (fat * 9);
   
-  if (calculatedCals === 0 && cals === 0) return true;
   if (calculatedCals === 0 && cals > 0) return false;
   
   const variance = Math.abs(cals - calculatedCals) / Math.max(cals, calculatedCals);
@@ -78,6 +87,40 @@ function isValidFood(food) {
   }
   
   return true;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   RELEVANCE FILTERING (Token Matching & Synonyms)
+   ────────────────────────────────────────────────────────────── */
+function getSearchTokens(query) {
+  const q = query.toLowerCase().trim();
+  const tokens = new Set(q.match(/\b\w+\b/g) || []);
+  
+  // Inject common synonyms for Indian foods
+  if (tokens.has('bottle') && tokens.has('gourd')) tokens.add('lauki');
+  if (tokens.has('bitter') && tokens.has('gourd')) tokens.add('karela');
+  if (tokens.has('ridge') && tokens.has('gourd')) tokens.add('turai');
+  if (tokens.has('lady') && tokens.has('finger')) { tokens.add('okra'); tokens.add('bhindi'); }
+  if (tokens.has('okra')) tokens.add('bhindi');
+  if (tokens.has('cottage') && tokens.has('cheese')) tokens.add('paneer');
+  if (tokens.has('clarified') && tokens.has('butter')) tokens.add('ghee');
+  if (tokens.has('panner') || tokens.has('paner') || tokens.has('panier')) tokens.add('paneer');
+  
+  return Array.from(tokens).filter(t => t.length > 2); // only significant tokens
+}
+
+function isRelevantMatch(food, queryTokens) {
+  if (queryTokens.length === 0) return true; // fallback if query had no significant tokens
+  
+  const title = (food.name || '').toLowerCase();
+  const brand = (food.brand || '').toLowerCase();
+  const cat = (food.category || '').toLowerCase();
+  const targetString = `${title} ${brand} ${cat}`;
+  
+  for (const token of queryTokens) {
+    if (targetString.includes(token)) return true;
+  }
+  return false;
 }
 
 /* ──────────────────────────────────────────────────────────────
@@ -179,7 +222,7 @@ function deduplicateFoods(foods) {
 /* ──────────────────────────────────────────────────────────────
    Helper: Normalize USDA response into our standard food format
    ────────────────────────────────────────────────────────────── */
-function normalizeUSDAFoods(foods) {
+function normalizeUSDAFoods(foods, queryTokens) {
   const mapped = foods
     .map((food) => ({
       id: `usda_${food.fdcId}`,
@@ -193,7 +236,7 @@ function normalizeUSDAFoods(foods) {
       fat: extractNutrient(food.foodNutrients, "Total lipid (fat)"),
       fiber: extractNutrient(food.foodNutrients, "Fiber, total dietary"),
     }))
-    .filter((f) => isValidFood(f)); // Apply strict mathematical validation
+    .filter((f) => isValidFood(f) && isRelevantMatch(f, queryTokens)); // Apply validation & relevance
 
   return deduplicateFoods(mapped);
 }
@@ -263,7 +306,8 @@ exports.searchUSDA = onCall(
       }
 
       const data = await response.json();
-      const foods = normalizeUSDAFoods(data.foods || []);
+      const queryTokens = getSearchTokens(query);
+      const foods = normalizeUSDAFoods(data.foods || [], queryTokens);
 
       return {
         foods,
