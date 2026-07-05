@@ -221,6 +221,8 @@ export async function searchOpenFoodFacts(query) {
     url.searchParams.set('action', 'process');
     url.searchParams.set('json', '1');
     url.searchParams.set('page_size', '15');
+    url.searchParams.set('cc', 'in');
+    url.searchParams.set('lc', 'en');
     url.searchParams.set(
       'fields',
       'code,product_name,brands,categories_tags_en,nutriments,image_small_url'
