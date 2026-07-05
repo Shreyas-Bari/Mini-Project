@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 
 const firebaseConfig = {
     apiKey: "AIzaSyBOyN9Sohv_2SEiHVb9OEpS9alVaTHwB4c",
@@ -17,4 +18,16 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
 
-export { app, auth, db, googleProvider };
+// Initialize your functions
+const functions = getFunctions(app);
+
+// Point to the emulator if we are in a local development environment
+const usingEmulator = window.location.hostname === "localhost";
+if (usingEmulator) {
+    connectFunctionsEmulator(functions, "localhost", 5001);
+    console.log("Connected to Firebase Functions Emulator on port 5001");
+}
+
+console.log("🚀 CURRENT SEARCH URL TARGET:", usingEmulator ? "http://localhost:5001" : "PRODUCTION LIVE API");
+
+export { app, auth, db, googleProvider, functions };

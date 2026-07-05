@@ -187,7 +187,7 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
   }, [user.uid, selectedDate]);
 
   /* ────── Debounced API Search ────── */
-  const performApiSearch = useCallback(async (query) => {
+  const performApiSearch = useCallback(async (query, category) => {
     if (!query || query.trim().length < 2) {
       setApiResults([]);
       setApiSearched(false);
@@ -201,7 +201,7 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
     setApiErrors([]);
 
     try {
-      const { usda, off, errors } = await searchAllAPIs(query);
+      const { usda, off, errors } = await searchAllAPIs(query, category);
       setApiResults([...usda, ...off]);
       setApiErrors(errors);
     } catch (e) {
@@ -232,7 +232,7 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
 
     // Debounce the actual API call by 500ms
     debounceRef.current = setTimeout(() => {
-      performApiSearch(searchQuery);
+      performApiSearch(searchQuery, activeCategory);
     }, 500);
 
     return () => {
@@ -240,7 +240,7 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
         clearTimeout(debounceRef.current);
       }
     };
-  }, [searchQuery, performApiSearch]);
+  }, [searchQuery, activeCategory, performApiSearch]);
 
   /* ────── Date Navigation ────── */
   const changeDateByOffset = (offset) => {
