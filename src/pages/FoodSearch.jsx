@@ -31,88 +31,9 @@ import {
    LOCAL FOOD DATABASE (Indian Foods — Instant Fallback Cache)
    All values are per 100g serving.
    ══════════════════════════════════════════════════════════════ */
-const FOOD_DB = [
-  // Breakfast
-  { id:"poha",         name:"Poha (Flattened Rice)",   category:"Breakfast",    calories:248, protein:4.4,  carbs:34.2, fat:10.4, fiber:2.6 },
-  { id:"upma",         name:"Upma (Semolina)",         category:"Breakfast",    calories:175, protein:4.2,  carbs:24.5, fat:6.8,  fiber:1.8 },
-  { id:"idli",         name:"Idli (Steamed Rice Cake)",category:"Breakfast",    calories:152, protein:3.9,  carbs:28.5, fat:1.8,  fiber:1.2 },
-  { id:"dosa_plain",   name:"Dosa (Plain)",            category:"Breakfast",    calories:168, protein:4.1,  carbs:27.6, fat:4.5,  fiber:1.0 },
-  { id:"masala_dosa",  name:"Masala Dosa",             category:"Breakfast",    calories:208, protein:4.8,  carbs:28.3, fat:8.5,  fiber:2.1 },
-  { id:"paratha",      name:"Aloo Paratha",            category:"Breakfast",    calories:260, protein:5.6,  carbs:30.2, fat:13.0, fiber:2.8 },
-  { id:"thepla",       name:"Thepla (Methi Paratha)",  category:"Breakfast",    calories:235, protein:6.2,  carbs:28.8, fat:10.5, fiber:3.2 },
-  { id:"puri",         name:"Puri (Fried Bread)",      category:"Breakfast",    calories:310, protein:5.0,  carbs:35.0, fat:16.5, fiber:1.6 },
-  { id:"medu_vada",    name:"Medu Vada",               category:"Breakfast",    calories:289, protein:10.5, carbs:24.0, fat:17.0, fiber:3.5 },
-  { id:"uttapam",      name:"Uttapam",                 category:"Breakfast",    calories:185, protein:5.2,  carbs:26.0, fat:6.5,  fiber:2.0 },
-  { id:"egg_boiled",   name:"Boiled Egg",              category:"Breakfast",    calories:155, protein:12.6, carbs:1.1,  fat:10.6, fiber:0   },
-  { id:"egg_omelette", name:"Egg Omelette",            category:"Breakfast",    calories:182, protein:11.0, carbs:1.5,  fat:14.5, fiber:0.2 },
+import FOOD_DB from '../data/ifct_matrix.json';
 
-  // Lunch/Dinner
-  { id:"roti",            name:"Roti / Chapati",          category:"Lunch/Dinner", calories:240, protein:7.8,  carbs:43.0, fat:3.5,  fiber:3.2 },
-  { id:"rice_white",      name:"White Rice (Cooked)",     category:"Lunch/Dinner", calories:130, protein:2.7,  carbs:28.0, fat:0.3,  fiber:0.4 },
-  { id:"rice_brown",      name:"Brown Rice (Cooked)",     category:"Lunch/Dinner", calories:112, protein:2.6,  carbs:23.5, fat:0.9,  fiber:1.8 },
-  { id:"dal_toor",        name:"Toor Dal (Arhar)",        category:"Lunch/Dinner", calories:128, protein:8.5,  carbs:18.5, fat:2.0,  fiber:3.8 },
-  { id:"dal_moong",       name:"Moong Dal",               category:"Lunch/Dinner", calories:118, protein:9.2,  carbs:16.0, fat:1.5,  fiber:3.2 },
-  { id:"rajma",           name:"Rajma (Kidney Bean Curry)",category:"Lunch/Dinner",calories:140, protein:7.8,  carbs:18.8, fat:3.5,  fiber:5.5 },
-  { id:"chole",           name:"Chole (Chickpea Curry)",  category:"Lunch/Dinner", calories:162, protein:8.5,  carbs:20.2, fat:5.5,  fiber:6.2 },
-  { id:"paneer_butter",   name:"Paneer Butter Masala",    category:"Lunch/Dinner", calories:218, protein:10.5, carbs:8.0,  fat:17.0, fiber:1.2 },
-  { id:"palak_paneer",    name:"Palak Paneer",            category:"Lunch/Dinner", calories:178, protein:9.8,  carbs:6.5,  fat:13.0, fiber:2.5 },
-  { id:"aloo_gobi",       name:"Aloo Gobi",               category:"Lunch/Dinner", calories:105, protein:2.5,  carbs:12.8, fat:5.2,  fiber:2.8 },
-  { id:"bhindi_masala",   name:"Bhindi Masala (Okra)",    category:"Lunch/Dinner", calories:98,  protein:2.2,  carbs:10.5, fat:5.5,  fiber:3.5 },
-  { id:"jeera_rice",      name:"Jeera Rice",              category:"Lunch/Dinner", calories:158, protein:3.0,  carbs:29.0, fat:3.2,  fiber:0.6 },
-  { id:"biryani_chicken", name:"Chicken Biryani",         category:"Lunch/Dinner", calories:192, protein:11.5, carbs:22.0, fat:6.5,  fiber:0.8 },
-  { id:"biryani_veg",     name:"Veg Biryani",             category:"Lunch/Dinner", calories:165, protein:4.2,  carbs:25.5, fat:5.0,  fiber:1.5 },
-  { id:"chicken_curry",   name:"Chicken Curry",           category:"Lunch/Dinner", calories:175, protein:14.0, carbs:5.5,  fat:11.0, fiber:1.0 },
-  { id:"chicken_breast",  name:"Chicken Breast (Grilled)",category:"Lunch/Dinner", calories:165, protein:31.0, carbs:0,    fat:3.6,  fiber:0   },
-  { id:"chicken_tikka",   name:"Chicken Tikka",           category:"Lunch/Dinner", calories:148, protein:22.0, carbs:3.5,  fat:5.2,  fiber:0.5 },
-  { id:"fish_curry",      name:"Fish Curry",              category:"Lunch/Dinner", calories:142, protein:15.5, carbs:4.0,  fat:7.2,  fiber:0.8 },
-  { id:"egg_curry",       name:"Egg Curry",               category:"Lunch/Dinner", calories:162, protein:10.5, carbs:6.0,  fat:11.0, fiber:0.8 },
-  { id:"dal_makhani",     name:"Dal Makhani",             category:"Lunch/Dinner", calories:155, protein:7.0,  carbs:16.0, fat:7.5,  fiber:4.0 },
-  { id:"mixed_sabzi",     name:"Mixed Vegetable Sabzi",   category:"Lunch/Dinner", calories:88,  protein:2.5,  carbs:10.0, fat:4.5,  fiber:3.0 },
-  { id:"sambhar",         name:"Sambhar",                 category:"Lunch/Dinner", calories:68,  protein:3.5,  carbs:9.8,  fat:1.5,  fiber:2.8 },
-  { id:"rasam",           name:"Rasam",                   category:"Lunch/Dinner", calories:35,  protein:1.5,  carbs:5.8,  fat:0.5,  fiber:0.8 },
-
-  // Snacks
-  { id:"samosa",      name:"Samosa",              category:"Snacks", calories:262, protein:4.5,  carbs:28.0, fat:15.0, fiber:2.5 },
-  { id:"vada_pav",    name:"Vada Pav",            category:"Snacks", calories:290, protein:5.8,  carbs:35.0, fat:14.5, fiber:2.8 },
-  { id:"bhel_puri",   name:"Bhel Puri",           category:"Snacks", calories:175, protein:4.2,  carbs:25.5, fat:6.5,  fiber:2.2 },
-  { id:"pani_puri",   name:"Pani Puri / Golgappa",category:"Snacks", calories:150, protein:3.0,  carbs:22.0, fat:5.5,  fiber:1.5 },
-  { id:"pakora",      name:"Pakora (Onion Bhaji)",category:"Snacks", calories:275, protein:5.5,  carbs:22.0, fat:18.5, fiber:2.5 },
-  { id:"dhokla",      name:"Dhokla",              category:"Snacks", calories:160, protein:6.0,  carbs:24.0, fat:4.5,  fiber:2.0 },
-  { id:"kachori",     name:"Kachori",             category:"Snacks", calories:320, protein:6.5,  carbs:30.0, fat:20.0, fiber:3.0 },
-  { id:"cutlet_veg",  name:"Vegetable Cutlet",    category:"Snacks", calories:188, protein:4.5,  carbs:20.0, fat:10.0, fiber:2.8 },
-
-  // Beverages
-  { id:"chai",          name:"Chai (Milk Tea)",      category:"Beverages", calories:55,  protein:2.0, carbs:7.5,  fat:1.8, fiber:0   },
-  { id:"coffee_milk",   name:"Coffee with Milk",     category:"Beverages", calories:48,  protein:2.2, carbs:5.5,  fat:1.8, fiber:0   },
-  { id:"lassi_sweet",   name:"Sweet Lassi",          category:"Beverages", calories:105, protein:3.5, carbs:16.0, fat:3.0, fiber:0   },
-  { id:"lassi_mango",   name:"Mango Lassi",          category:"Beverages", calories:120, protein:3.2, carbs:20.0, fat:3.0, fiber:0.5 },
-  { id:"buttermilk",    name:"Buttermilk / Chaas",   category:"Beverages", calories:28,  protein:2.0, carbs:3.0,  fat:0.8, fiber:0   },
-  { id:"nimbu_pani",    name:"Nimbu Pani (Lemonade)",category:"Beverages", calories:42,  protein:0.2, carbs:10.5, fat:0,   fiber:0.1 },
-  { id:"coconut_water", name:"Coconut Water",        category:"Beverages", calories:19,  protein:0.7, carbs:3.7,  fat:0.2, fiber:0   },
-
-  // Dairy
-  { id:"paneer_raw",  name:"Paneer (Raw)",             category:"Dairy", calories:265, protein:18.3, carbs:1.2,  fat:20.8, fiber:0   },
-  { id:"curd",        name:"Curd / Yogurt",            category:"Dairy", calories:60,  protein:3.5,  carbs:4.7,  fat:3.1,  fiber:0   },
-  { id:"milk_whole",  name:"Whole Milk",               category:"Dairy", calories:62,  protein:3.3,  carbs:4.8,  fat:3.3,  fiber:0   },
-  { id:"ghee",        name:"Ghee (Clarified Butter)",  category:"Dairy", calories:900, protein:0,    carbs:0,    fat:100,  fiber:0   },
-
-  // Grains
-  { id:"oats",        name:"Oats (Cooked)",            category:"Grains", calories:68,  protein:2.5,  carbs:12.0, fat:1.4, fiber:1.7 },
-  { id:"wheat_flour", name:"Whole Wheat Flour (Atta)", category:"Grains", calories:340, protein:12.0, carbs:72.0, fat:1.7, fiber:10.7},
-  { id:"bread_wheat", name:"Wheat Bread (per 100g)",   category:"Grains", calories:265, protein:9.0,  carbs:49.0, fat:3.2, fiber:2.7 },
-  { id:"muesli",      name:"Muesli",                   category:"Grains", calories:370, protein:9.5,  carbs:67.0, fat:6.0, fiber:7.0 },
-
-  // Fruits & Vegetables
-  { id:"banana",      name:"Banana",                    category:"Fruits & Vegetables", calories:89, protein:1.1, carbs:22.8, fat:0.3, fiber:2.6 },
-  { id:"apple",       name:"Apple",                     category:"Fruits & Vegetables", calories:52, protein:0.3, carbs:13.8, fat:0.2, fiber:2.4 },
-  { id:"mango",       name:"Mango",                     category:"Fruits & Vegetables", calories:60, protein:0.8, carbs:15.0, fat:0.4, fiber:1.6 },
-  { id:"papaya",      name:"Papaya",                    category:"Fruits & Vegetables", calories:43, protein:0.5, carbs:11.0, fat:0.3, fiber:1.7 },
-  { id:"pomegranate", name:"Pomegranate",               category:"Fruits & Vegetables", calories:83, protein:1.7, carbs:18.7, fat:1.2, fiber:4.0 },
-  { id:"spinach",     name:"Spinach (Palak, Cooked)",   category:"Fruits & Vegetables", calories:23, protein:2.9, carbs:3.6,  fat:0.4, fiber:2.2 },
-  { id:"tomato",      name:"Tomato",                    category:"Fruits & Vegetables", calories:18, protein:0.9, carbs:3.9,  fat:0.2, fiber:1.2 }
-];
-
-const CATEGORIES = ["All", "Breakfast", "Lunch/Dinner", "Snacks", "Beverages", "Dairy", "Grains", "Fruits & Vegetables"];
+const CATEGORIES = ["All", "Cooked Meals", "Vegetables & Fruits", "Dairy", "Grains & Pulses"];
 
 /* ──────────────────────────────────────────────
    Date utilities
@@ -192,7 +113,7 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
   }, [user.uid, selectedDate]);
 
   /* ────── Debounced API Search ────── */
-  const performApiSearch = useCallback(async (query) => {
+  const performApiSearch = useCallback(async (query, category) => {
     if (!query || query.trim().length < 2) {
       setApiResults([]);
       setApiSearched(false);
@@ -206,7 +127,7 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
     setApiErrors([]);
 
     try {
-      const { usda, off, errors } = await searchAllAPIs(query);
+      const { usda, off, errors } = await searchAllAPIs(query, category);
       setApiResults([...usda, ...off]);
       setApiErrors(errors);
     } catch (e) {
@@ -237,7 +158,7 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
 
     // Debounce the actual API call by 500ms
     debounceRef.current = setTimeout(() => {
-      performApiSearch(searchQuery);
+      performApiSearch(searchQuery, activeCategory);
     }, 500);
 
     return () => {
@@ -245,7 +166,7 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
         clearTimeout(debounceRef.current);
       }
     };
-  }, [searchQuery, performApiSearch]);
+  }, [searchQuery, activeCategory, performApiSearch]);
 
   /* ────── Date Navigation ────── */
   const changeDateByOffset = (offset) => {
@@ -260,7 +181,8 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
 
   /* ────── Filter local food database ────── */
   const filteredLocalFoods = FOOD_DB.filter(food => {
-    const matchesQuery = food.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const searchLower = searchQuery.toLowerCase();
+    const matchesQuery = food.name.toLowerCase().includes(searchLower) || (food.category && food.category.toLowerCase().includes(searchLower));
     const matchesCategory = activeCategory === 'All' || food.category === activeCategory;
     return matchesQuery && matchesCategory;
   });
@@ -480,10 +402,33 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
           {/* Food title, source badge & calorie count */}
           <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-bold text-slate-100 leading-snug">{food.name}</h3>
-              {food.brand && (
-                <p className="text-[10px] text-slate-500 mt-0.5 truncate">{food.brand}</p>
-              )}
+              <div className="flex flex-wrap gap-1.5 items-center">
+                <h3 className="text-sm font-bold text-slate-100 leading-snug">{food.name}</h3>
+                
+                {source === 'Local' && (
+                  <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs px-2 py-0.5 rounded-md font-medium whitespace-nowrap">
+                    Verified Baseline
+                  </span>
+                )}
+
+                {source !== 'Local' && (
+                  (() => {
+                    const categoryUpper = (food.category || '').toUpperCase();
+                    const isCommercialCategory = 
+                      categoryUpper.includes('FROZEN DINNERS & ENTREES') ||
+                      categoryUpper.includes('SEASONING MIXES') ||
+                      categoryUpper.includes('PREPARED WRAPS AND BURRITOS');
+                      
+                    if (isCommercialCategory) return null;
+
+                    return (
+                      <span className={food.brand ? "bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 text-xs px-2 py-0.5 rounded-md font-semibold whitespace-nowrap" : "bg-slate-500/10 text-slate-300 border border-slate-500/20 text-xs px-2 py-0.5 rounded-md font-semibold whitespace-nowrap"}>
+                        {food.brand ? (food.brand.length > 25 ? food.brand.substring(0, 25) + '...' : food.brand) : "Branded Packaged"}
+                      </span>
+                    );
+                  })()
+                )}
+              </div>
               <div className="flex items-center gap-1.5 mt-1.5">
                 <span className={`inline-flex items-center gap-1 text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-widest border ${badge.cls}`}>
                   <BadgeIcon className="w-2.5 h-2.5" />
@@ -957,24 +902,24 @@ export default function FoodSearch({ user, activeDate, setActiveDate }) {
             <div className="mt-4 pt-4 border-t border-white/[0.06] space-y-4 shrink-0">
               <div className="flex items-center justify-between text-white font-extrabold">
                 <span className="text-sm">Total Logged</span>
-                <span className="text-lg bg-gradient-to-r from-accent-purple to-accent-teal bg-clip-text text-transparent">{dailyTotals.calories} kcal</span>
+                <span className="text-lg bg-gradient-to-r from-accent-purple to-accent-teal bg-clip-text text-transparent">{Math.round(dailyTotals.calories)} kcal</span>
               </div>
               
               <div className="grid grid-cols-4 gap-2 text-center text-[10px] text-slate-400">
                 <div className="bg-white/5 border border-white/10 py-2 rounded-xl">
-                  <p className="font-bold text-accent-pink">{dailyTotals.protein}g</p>
+                  <p className="font-bold text-accent-pink">{Number(dailyTotals.protein.toFixed(2))}g</p>
                   <p className="uppercase mt-0.5 text-slate-500 font-bold">Pro</p>
                 </div>
                 <div className="bg-white/5 border border-white/10 py-2 rounded-xl">
-                  <p className="font-bold text-accent-yellow">{dailyTotals.carbs}g</p>
+                  <p className="font-bold text-accent-yellow">{Number(dailyTotals.carbs.toFixed(2))}g</p>
                   <p className="uppercase mt-0.5 text-slate-500 font-bold">Carb</p>
                 </div>
                 <div className="bg-white/5 border border-white/10 py-2 rounded-xl">
-                  <p className="font-bold text-accent-green">{dailyTotals.fat}g</p>
+                  <p className="font-bold text-accent-green">{Number(dailyTotals.fat.toFixed(2))}g</p>
                   <p className="uppercase mt-0.5 text-slate-500 font-bold">Fat</p>
                 </div>
                 <div className="bg-white/5 border border-white/10 py-2 rounded-xl">
-                  <p className="font-bold text-accent-blue">{dailyTotals.fiber}g</p>
+                  <p className="font-bold text-accent-blue">{Number(dailyTotals.fiber.toFixed(2))}g</p>
                   <p className="uppercase mt-0.5 text-slate-500 font-bold">Fib</p>
                 </div>
               </div>
