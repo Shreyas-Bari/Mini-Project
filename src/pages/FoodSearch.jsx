@@ -4,7 +4,229 @@ import { db } from '../firebase';
 import { collection, addDoc, deleteDoc, doc, getDocs, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
 import GlassCard from '../components/GlassCard';
-import { searchAllAPIs } from '../services/foodApi';
+/* ══════════════════════════════════════════════════════════════
+   CLIENT-SIDE DATA CLEANSING & API ORCHESTRATION PIPELINE
+   ══════════════════════════════════════════════════════════════ */
+
+function getSearchTokens(query) {
+  const q = query.toLowerCase().trim();
+  const tokens = new Set(q.match(/\b\w+\b/g) || []);
+  if (tokens.has('bottle') && tokens.has('gourd')) tokens.add('lauki');
+  if (tokens.has('bitter') && tokens.has('gourd')) tokens.add('karela');
+  if (tokens.has('ridge') && tokens.has('gourd')) tokens.add('turai');
+  if (tokens.has('lady') && tokens.has('finger')) { tokens.add('okra'); tokens.add('bhindi'); }
+  if (tokens.has('okra')) tokens.add('bhindi');
+  if (tokens.has('cottage') && tokens.has('cheese')) tokens.add('paneer');
+  if (tokens.has('clarified') && tokens.has('butter')) tokens.add('ghee');
+  if (tokens.has('panner') || tokens.has('paner') || tokens.has('panier')) tokens.add('paneer');
+  return Array.from(tokens).filter(t => t.length > 2);
+}
+
+function isRelevantMatch(food, queryTokens) {
+  if (queryTokens.length === 0) return true;
+  const targetString = `${food.name || ''} ${food.brand || ''} ${food.category || ''}`.toLowerCase();
+  for (const token of queryTokens) {
+    if (targetString.includes(token)) return true;
+  }
+  return false;
+}
+
+function isValidFood(food) {
+  const isInvalid = (val) => val === null || val === undefined || val === '' || isNaN(Number(val));
+  if (isInvalid(food.calories) || isInvalid(food.protein) || isInvalid(food.carbs) || isInvalid(food.fat)) return false;
+  
+  const cals = Number(food.calories);
+  const pro = Number(food.protein);
+  const carb = Number(food.carbs);
+  const fat = Number(food.fat);
+  
+  if (cals === 0 && pro === 0 && carb === 0 && fat === 0) {
+    const title = (food.name || '').toLowerCase();
+    const cat = (food.category || '').toLowerCase();
+    if (!title.includes('water') && !cat.includes('water') && !title.includes('diet') && !cat.includes('diet')) return false;
+    return true;
+  }
+  
+  const calculatedCals = (pro * 4) + (carb * 4) + (fat * 9);
+  if (calculatedCals === 0 && cals > 0) return false;
+  
+  const variance = Math.abs(cals - calculatedCals) / Math.max(cals, calculatedCals);
+  if (variance > 0.12) return false;
+  return true;
+}
+
+function isContextuallyValid(food, originalQuery, activeCategory) {
+  const q = originalQuery.toLowerCase();
+  const cat = (food.category || '').toUpperCase();
+  const name = (food.name || '').toLowerCase();
+
+  if (q.includes("paneer") || q.includes("curd") || q.includes("milk")) {
+    if (cat.includes("NUT & SEED BUTTERS") || cat.includes("NUT BUTTER") || cat.includes("SEED BUTTER") || cat.includes("CONFECTIONERY") || cat.includes("CANDY") || cat.includes("JUICE")) return false;
+  }
+
+  if (activeCategory === 'All') {
+    if (cat.includes("NON-FOOD") || cat.includes("COSMETICS") || cat.includes("BODY CARE")) return false;
+  }
+  if (activeCategory === 'Dairy') {
+    if (cat.includes("MEAT") || cat.includes("POULTRY") || cat.includes("FISH")) return false;
+    if (q.includes("paneer") && food.carbs > 10) return false;
+  }
+  if (activeCategory === 'Vegetables & Fruits') {
+    if (cat.includes("MEAT") || cat.includes("POULTRY") || cat.includes("FISH") || cat.includes("DAIRY")) return false;
+    if (food.protein > 15 && !name.includes("soy") && !name.includes("bean")) return false;
+  }
+  if (activeCategory === 'Cooked Meals') {
+    if (cat.includes("RAW") || cat.includes("UNCOOKED")) return false;
+  }
+  return true;
+}
+
+function areNamesSimilar(name1, name2) {
+  const n1 = name1.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
+  const n2 = name2.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
+  return n1 === n2;
+}
+
+function deduplicateFoods(foods) {
+  if (!foods || !Array.isArray(foods)) return [];
+  const uniqueFoods = [];
+  for (const food of foods) {
+    const duplicate = uniqueFoods.find(u => areNamesSimilar(food.name, u.name));
+    if (duplicate) {
+      if (food.brand && !duplicate._brands.includes(food.brand)) duplicate._brands.push(food.brand);
+    } else {
+      uniqueFoods.push({ ...food, _brands: food.brand ? [food.brand] : [] });
+    }
+  }
+  return uniqueFoods.map(item => {
+    if (item._brands && item._brands.length > 0) {
+      if (item._brands.length === 1) item.brand = item._brands[0];
+      else {
+        const primary = item._brands.slice(0, 3);
+        const remaining = item._brands.length - 3;
+        item.brand = `${primary.join(', ')}${remaining > 0 ? ` & ${remaining} other${remaining > 1 ? 's' : ''}` : ''}`;
+      }
+    } else item.brand = '';
+    delete item._brands;
+    return item;
+  });
+}
+
+function extractUSDANutrient(nutrients, name) {
+  if (!nutrients || !Array.isArray(nutrients)) return 0;
+  const found = nutrients.find((n) => n.nutrientName?.toLowerCase().includes(name.toLowerCase()));
+  return found ? Math.round(found.value * 10) / 10 : 0;
+}
+
+function titleCase(str) {
+  if (!str) return '';
+  return str.toLowerCase().split(',')[0].trim().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+async function searchUSDADirect(query, activeCategory, queryTokens) {
+  const apiKey = import.meta.env.VITE_USDA_API_KEY || "DEMO_KEY";
+  try {
+    const url = new URL('https://api.nal.usda.gov/fdc/v1/foods/search');
+    url.searchParams.set('api_key', apiKey);
+    url.searchParams.set('query', query.trim());
+    url.searchParams.set('pageSize', '20');
+    url.searchParams.set('dataType', 'Foundation,SR Legacy');
+
+    const response = await fetch(url.toString());
+    if (!response.ok) throw new Error(`USDA API returned status ${response.status}`);
+    
+    const data = await response.json();
+    return (data.foods || [])
+      .map((food) => ({
+        id: `usda_${food.fdcId}`,
+        name: titleCase(food.description || ''),
+        brand: food.brandName || food.brandOwner || '',
+        category: food.foodCategory || 'General',
+        source: 'USDA',
+        calories: extractUSDANutrient(food.foodNutrients, 'Energy'),
+        protein: extractUSDANutrient(food.foodNutrients, 'Protein'),
+        carbs: extractUSDANutrient(food.foodNutrients, 'Carbohydrate, by difference'),
+        fat: extractUSDANutrient(food.foodNutrients, 'Total lipid (fat)'),
+        fiber: extractUSDANutrient(food.foodNutrients, 'Fiber, total dietary'),
+      }))
+      .filter((f) => isValidFood(f) && isContextuallyValid(f, query, activeCategory) && isRelevantMatch(f, queryTokens));
+  } catch (error) {
+    console.error('Direct USDA search error:', error);
+    return [];
+  }
+}
+
+async function searchOpenFoodFacts(query, activeCategory, queryTokens) {
+  try {
+    const url = new URL('https://world.openfoodfacts.org/cgi/search.pl');
+    url.searchParams.set('search_terms', query.trim());
+    url.searchParams.set('search_simple', '1');
+    url.searchParams.set('action', 'process');
+    url.searchParams.set('json', '1');
+    url.searchParams.set('page_size', '15');
+    url.searchParams.set('fields', 'code,product_name,brands,categories_tags_en,nutriments');
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    const response = await fetch(url.toString(), { signal: controller.signal });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) throw new Error(`Open Food Facts API returned status ${response.status}`);
+    
+    const data = await response.json();
+    return (data.products || [])
+      .filter((p) => p.product_name)
+      .map((product) => {
+        const n = product.nutriments || {};
+        const caloriesKcal = n['energy-kcal_100g'] || (n.energy_100g ? Math.round(n.energy_100g / 4.184) : 0);
+        return {
+          id: `off_${product.code || Math.random().toString(36).slice(2)}`,
+          name: product.product_name || 'Unknown Product',
+          brand: product.brands || '',
+          category: (product.categories_tags_en || []).slice(0, 1).join(', ').replace(/en:/g, '').replace(/-/g, ' ') || 'Packaged Food',
+          source: 'Open Food Facts',
+          calories: Math.round(caloriesKcal),
+          protein: Math.round((n.proteins_100g || 0) * 10) / 10,
+          carbs: Math.round((n.carbohydrates_100g || 0) * 10) / 10,
+          fat: Math.round((n.fat_100g || 0) * 10) / 10,
+          fiber: Math.round((n.fiber_100g || 0) * 10) / 10,
+        };
+      })
+      .filter((f) => isValidFood(f) && isContextuallyValid(f, query, activeCategory) && isRelevantMatch(f, queryTokens));
+  } catch (error) {
+    console.error('Open Food Facts search error:', error);
+    return [];
+  }
+}
+
+async function searchAllAPIs(query, activeCategory = 'All') {
+  if (!query || query.trim().length < 2) return { usda: [], off: [], errors: [] };
+
+  const q = query.toLowerCase().trim();
+  let normalizedQuery = q;
+  if (["panner", "paner", "panier", "paneer"].includes(q)) normalizedQuery = "paneer";
+  if (["dhal", "daal", "dal"].includes(q)) normalizedQuery = "dal";
+  if (["chappati", "chapati", "chapatti", "roti"].includes(q)) normalizedQuery = "roti";
+
+  const queryTokens = getSearchTokens(normalizedQuery);
+  const errors = [];
+
+  const [usdaResult, offResult] = await Promise.allSettled([
+    searchUSDADirect(normalizedQuery, activeCategory, queryTokens),
+    searchOpenFoodFacts(normalizedQuery, activeCategory, queryTokens)
+  ]);
+
+  const usda = usdaResult.status === 'fulfilled' ? usdaResult.value : [];
+  if (usdaResult.status === 'rejected') errors.push('USDA search failed');
+
+  const off = offResult.status === 'fulfilled' ? offResult.value : [];
+  if (offResult.status === 'rejected') errors.push('Open Food Facts search failed');
+
+  const combined = [...usda, ...off];
+  const cleanedAndTiered = deduplicateFoods(combined);
+  
+  return { usda: cleanedAndTiered, off: [], errors };
+}
 import { 
   Search, 
   Trash2, 

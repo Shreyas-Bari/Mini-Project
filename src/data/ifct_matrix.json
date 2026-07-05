@@ -68,5 +68,6 @@
   { "id":"bhindi_raw",    "name":"Okra (Bhindi, Raw)",     "category":"Vegetables & Fruits", "calories":33, "protein":1.9, "carbs":7.5,  "fat":0.2, "fiber":3.2 },
   { "id":"nimbu_pani",    "name":"Nimbu Pani (Lemonade)",  "category":"Vegetables & Fruits", "calories":42, "protein":0.2, "carbs":10.5, "fat":0,   "fiber":0.1 },
   { "id":"coconut_water", "name":"Coconut Water",          "category":"Vegetables & Fruits", "calories":19, "protein":0.7, "carbs":3.7,  "fat":0.2, "fiber":0   },
-  { "id":"bottle_gourd",  "name":"Bottle Gourd (Lauki)",   "category":"Vegetables & Fruits", "calories":14, "protein":0.6, "carbs":3.4,  "fat":0.1, "fiber":1.2 }
+  { "id":"bottle_gourd",  "name":"Bottle Gourd / Lauki",   "category":"Vegetables & Fruits", "calories":15, "protein":0.6, "carbs":3.4,  "fat":0.1, "fiber":1.2 },
+  { "id":"bitter_gourd",  "name":"Bitter Gourd / Karela",  "category":"Vegetables & Fruits", "calories":17, "protein":1.0, "carbs":3.7,  "fat":0.1, "fiber":1.5 }
 ]
