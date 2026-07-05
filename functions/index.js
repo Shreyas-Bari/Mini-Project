@@ -287,7 +287,7 @@ exports.searchUSDA = onCall(
       url.searchParams.set("api_key", apiKey);
       url.searchParams.set("query", query.trim());
       url.searchParams.set("pageSize", "20");
-      url.searchParams.set("dataType", "Foundation,SR Legacy,Branded");
+      url.searchParams.set("dataType", "Foundation,SR Legacy");
 
       const response = await fetch(url.toString(), {
         method: "GET",
