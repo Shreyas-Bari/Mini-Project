@@ -1,0 +1,52 @@
+# NutriTrack CI/CD Pipeline
+#
+# Triggers on pushes to the 'main' branch.
+# Builds the Vite production bundle and deploys it to Firebase Hosting.
+#
+# Requirements:
+#   1. A GitHub Repository Secret named FIREBASE_SERVICE_ACCOUNT_CALORIE_TRACKER
+#      containing the Firebase service account JSON key.
+#      (Generate from Firebase Console > Project Settings > Service Accounts > Generate New Private Key)
+#
+# Cost: $0 — uses GitHub Actions free minutes (2,000/month) and Firebase Spark free tier hosting.
+
+name: Build & Deploy to Firebase Hosting
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── Step 1: Checkout repository code ──
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── Step 2: Set up Node.js 20 ──
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # ── Step 3: Install project dependencies ──
+      - name: Install dependencies
+        run: npm ci
+
+      # ── Step 4: Build production assets ──
+      - name: Build production bundle
+        run: npm run build
+
+      # ── Step 5: Deploy to Firebase Hosting ──
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_CALORIE_TRACKER }}
+          channelId: live
+          projectId: calorie-tracker-9a1d2

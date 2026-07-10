@@ -13,10 +13,11 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  X
+  X,
+  ShieldCheck
 } from 'lucide-react';
 
-export default function Sidebar({ user, isCollapsed, setIsCollapsed, isMobileDrawerOpen, setIsMobileDrawerOpen }) {
+export default function Sidebar({ user, userRole, isCollapsed, setIsCollapsed, isMobileDrawerOpen, setIsMobileDrawerOpen }) {
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -44,6 +45,11 @@ export default function Sidebar({ user, isCollapsed, setIsCollapsed, isMobileDra
   const supportNavItems = [
     { name: "Feedback", path: "/feedback", icon: MessageSquare },
   ];
+
+  // ── Admin nav items (only shown to admin role users) ──
+  const adminNavItems = userRole === 'admin' ? [
+    { name: "Admin Panel", path: "/admin", icon: ShieldCheck },
+  ] : [];
 
   const getInitials = (name) => {
     if (!name) return 'U';
@@ -142,6 +148,15 @@ export default function Sidebar({ user, isCollapsed, setIsCollapsed, isMobileDra
           <span className={`text-[10px] font-semibold text-slate-500 uppercase tracking-widest px-3 mt-5 mb-2 ${isCollapsed ? 'md:hidden' : ''}`}>Support</span>
           {isCollapsed && <div className="hidden md:block h-6" />}
           {supportNavItems.map(renderNavItem)}
+
+          {/* Admin Section — Only visible to admin role */}
+          {adminNavItems.length > 0 && (
+            <>
+              <span className={`text-[10px] font-semibold text-amber-500/80 uppercase tracking-widest px-3 mt-5 mb-2 ${isCollapsed ? 'md:hidden' : ''}`}>Admin</span>
+              {isCollapsed && <div className="hidden md:block h-6" />}
+              {adminNavItems.map(renderNavItem)}
+            </>
+          )}
         </nav>
 
         {/* User Footer */}
@@ -155,7 +170,12 @@ export default function Sidebar({ user, isCollapsed, setIsCollapsed, isMobileDra
               </div>
             )}
             <div className={`flex-1 min-w-0 ${isCollapsed ? 'md:hidden' : ''}`}>
-              <p className="text-sm font-semibold text-white truncate">{user?.displayName || 'NutriTrack User'}</p>
+              <div className="flex items-center gap-1.5">
+                <p className="text-sm font-semibold text-white truncate">{user?.displayName || 'NutriTrack User'}</p>
+                {userRole === 'admin' && (
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                )}
+              </div>
               <p className="text-[11px] text-slate-500 truncate">{user?.email}</p>
             </div>
           </div>

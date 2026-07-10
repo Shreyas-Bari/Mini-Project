@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from './firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from './firebase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 
@@ -14,15 +15,45 @@ import MealTracker from './pages/MealTracker';
 import Goals from './pages/Goals';
 import Analytics from './pages/Analytics';
 import Feedback from './pages/Feedback';
+import AdminDashboard from './pages/AdminDashboard';
 
 const getTodayDateString = () => new Date().toLocaleDateString('en-CA');
 
 const LATEST_UPDATE_MESSAGE = "Update v1.3: We have adjusted the Aspect Ratio to suit for Mobile Users. Feel Free to use the Website via a Mobile Phone!";
 
+/* ══════════════════════════════════════════════════════════════
+   ADMIN ROUTE GUARD — Fetches user role from Firestore
+   Redirects non-admin users to the standard dashboard.
+   ══════════════════════════════════════════════════════════════ */
+function AdminRoute({ user, userRole, roleLoading, children }) {
+  if (roleLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-32 text-center">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/20 flex items-center justify-center mb-4 animate-pulse">
+          <svg className="w-6 h-6 text-amber-400 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <circle cx="12" cy="12" r="10" strokeDasharray="30" strokeDashoffset="0" />
+          </svg>
+        </div>
+        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Verifying admin privileges...</p>
+      </div>
+    );
+  }
+
+  if (userRole !== 'admin') {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+}
+
 export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeLogDate, setActiveLogDate] = useState(getTodayDateString);
+
+  // ── Role-Based Access Control State ──
+  const [userRole, setUserRole] = useState(null);
+  const [roleLoading, setRoleLoading] = useState(true);
 
   const [isCollapsed, setIsCollapsed] = useState(() => {
     const saved = localStorage.getItem('nutritrack_sidebar_collapsed');
@@ -52,6 +83,43 @@ export default function App() {
     });
     return unsubscribe;
   }, []);
+
+  // ── Fetch user role from Firestore when user changes ──
+  useEffect(() => {
+    if (!user) {
+      setUserRole(null);
+      setRoleLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    const fetchRole = async () => {
+      setRoleLoading(true);
+      try {
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (!cancelled) {
+          if (userDoc.exists()) {
+            setUserRole(userDoc.data().role || 'user');
+          } else {
+            setUserRole('user');
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching user role:', err);
+        if (!cancelled) {
+          setUserRole('user'); // Fail-safe: default to regular user
+        }
+      } finally {
+        if (!cancelled) {
+          setRoleLoading(false);
+        }
+      }
+    };
+
+    fetchRole();
+    return () => { cancelled = true; };
+  }, [user]);
 
   if (loading) {
     return (
@@ -130,6 +198,7 @@ export default function App() {
 
                 <Sidebar
                   user={user}
+                  userRole={userRole}
                   isCollapsed={isCollapsed}
                   setIsCollapsed={setIsCollapsed}
                   isMobileDrawerOpen={isMobileDrawerOpen}
@@ -168,6 +237,14 @@ export default function App() {
                       <Route path="/goals" element={<Goals user={user} />} />
                       <Route path="/analytics" element={<Analytics user={user} />} />
                       <Route path="/feedback" element={<Feedback user={user} />} />
+                      <Route
+                        path="/admin"
+                        element={
+                          <AdminRoute user={user} userRole={userRole} roleLoading={roleLoading}>
+                            <AdminDashboard user={user} />
+                          </AdminRoute>
+                        }
+                      />
                       <Route path="*" element={<Navigate to="/" />} />
                     </Routes>
                   </main>
